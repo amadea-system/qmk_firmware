@@ -1,0 +1,73 @@
+
+/* 
+ * Leader Key Definitions
+ * 
+ * https://docs.qmk.fm/#/feature_macros
+ * https://thomasbaart.nl/2018/12/20/qmk-basics-leader-key/
+ * https://tulpa.dev/cadey/kadis-layouts/src/branch/master/moonlander/leader.c
+ * 
+ * ------------------------------------------------------------------------------ 
+ * 
+ * Copyright 2020 Amadea System
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+
+#include "quantum.h"
+
+LEADER_EXTERNS();
+
+void matrix_scan_user(void) {
+  LEADER_DICTIONARY() {
+    leading = false;
+    leader_end();
+
+
+    // -- Proxy Tags -- //
+    // SEQ_ONE_KEY(KC_R) { SEND_STRING("{ "); }  //Luna
+    SEQ_ONE_KEY(KC_R) { SEND_STRING("Luna\\ "); }  //Luna
+    SEQ_ONE_KEY(KC_F) { SEND_STRING("/f "); } //Fluttershy
+    
+
+    // -- Fun Stuff!!!!!!!!!! -- //
+    // !!!!!!!!!!!!!!!!!!!!!!
+    SEQ_ONE_KEY(KC_1) { SEND_STRING("!!!!!!!!!!"); }        // !!!!!!!!!!!!!!!!!!!!
+    SEQ_ONE_KEY(KC_N) { SEND_STRING("Nyaaaaaa!!!!!"); }     // Nyaaaa
+
+    // -- Discord Emoji  -- //
+    SEQ_TWO_KEYS(KC_E, KC_T) { SEND_STRING(":TsuTail:"); }       // TsuTail
+    SEQ_TWO_KEYS(KC_E, KC_H) { SEND_STRING(":hibiki_happy:"); }  // Hibiki_Happy
+    SEQ_TWO_KEYS(KC_E, KC_S) { SEND_STRING(":TsuTired:"); }      // TsuTired
+
+
+    // -- Web Browsers -- //
+    SEQ_ONE_KEY(KC_BSPC) { SEND_STRING(SS_TAP(X_WBAK)); }  // Go back
+    SEQ_ONE_KEY(KC_B) { SEND_STRING(SS_TAP(X_WBAK)); }     // Go back
+    SEQ_TWO_KEYS(KC_R, KC_T) {SEND_STRING(SS_LCTRL(SS_LSFT("t")));}  // Open closed tab (CTRL+Shift+T)
+    
+
+
+    // -- QMK Features -- //
+
+    // Autoshift
+    #ifdef AUTO_SHIFT_ENABLE
+    SEQ_THREE_KEYS(KC_A, KC_S, KC_T) { autoshift_toggle(); }  // Toggle
+    #endif
+
+    // Toggle interactive terminal
+    // SEQ_TWO_KEYS(KC_T, KC_O) { SEND_STRING()}
+
+  }
+}
