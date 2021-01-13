@@ -1,0 +1,59 @@
+# Bootloader selection
+#   Teensy       halfkay
+#   Pro Micro    caterina
+#   Atmel DFU    atmel-dfu
+#   LUFA DFU     lufa-dfu
+#   QMK DFU      qmk-dfu
+#   ATmega32A    bootloadHID
+#   ATmega328P   USBasp
+BOOTLOADER = atmel-dfu
+
+
+# Build Options
+#   change to "no" to disable the options, or define them in the Makefile in
+#   the appropriate keymap folder that will get included automatically
+#
+BOOTMAGIC_ENABLE = no       # Virtual DIP switch configuration
+MOUSEKEY_ENABLE = no        # Mouse keys
+CONSOLE_ENABLE = no         # Console for debug
+COMMAND_ENABLE = no         # Commands for debug and configuration
+BACKLIGHT_ENABLE = no       # Enable keyboard backlight functionality
+MIDI_ENABLE = no            # MIDI controls
+AUDIO_ENABLE = no           # Audio output on port C6
+UNICODE_ENABLE = no         # Unicode
+BLUETOOTH_ENABLE = no       # Enable Bluetooth with the Adafruit EZ-Key HID
+RGBLIGHT_ENABLE = no        # Enable WS2812 RGB underlight. 
+SWAP_HANDS_ENABLE = no      # Enable one-hand typing
+TERMINAL_ENABLE = no        # Enable interactive terminal. Takes up a lot of space!
+AUTO_SHIFT_ENABLE=no
+
+NKRO_ENABLE = yes           # Nkey Rollover - if this doesn't work, see here: https://github.com/tmk/tmk_keyboard/wiki/FAQ#nkro-doesnt-work
+EXTRAKEY_ENABLE = yes       # Audio control and System control
+OLED_DRIVER_ENABLE= yes     # OLED display
+LEADER_ENABLE = yes         # Enable Leader Key
+
+COMBO_ENABLE = no           # Used to allow chording of keys to trigger an action
+TAP_DANCE_ENABLE = yes       # Used to allow multiple taps of a key to perform different actions
+
+LTO_ENABLE = yes            # Reduces the compiled firmware size
+# EXTRAFLAGS += -flto         # https://thomasbaart.nl/2018/12/01/reducing-firmware-size-in-qmk/
+
+# Do not enable SLEEP_LED_ENABLE. it uses the same timer as BACKLIGHT_ENABLE
+SLEEP_LED_ENABLE = no       # Breathing sleep LED during USB suspend
+
+
+# Code for Leader Keys, Macros, Tap Dance, ETC
+SRC +=  leader.c \
+        tap_dance.c \
+        oled/amadea_oled.c \
+        oled/amadea_oled_art.c
+
+
+# If you want to change the display of OLED, you need to change here
+SRC +=  ./lib/rgb_state_reader.c \
+        ./lib/logo_reader.c \
+        # ./lib/keylogger.c \
+        # ./lib/timelogger.c \
+        # ./lib/mode_icon_reader.c \
+        # ./lib/host_led_state_reader.c \
+        # ./keymaps/lcd/layer_state_reader.c
