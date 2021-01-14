@@ -15,14 +15,13 @@ BOOTLOADER = atmel-dfu
 #
 BOOTMAGIC_ENABLE = no       # Virtual DIP switch configuration
 MOUSEKEY_ENABLE = no        # Mouse keys
-CONSOLE_ENABLE = no         # Console for debug
+CONSOLE_ENABLE = yes         # Console for debug
 COMMAND_ENABLE = no         # Commands for debug and configuration
 BACKLIGHT_ENABLE = no       # Enable keyboard backlight functionality
 MIDI_ENABLE = no            # MIDI controls
 AUDIO_ENABLE = no           # Audio output on port C6
-UNICODE_ENABLE = no         # Unicode
 BLUETOOTH_ENABLE = no       # Enable Bluetooth with the Adafruit EZ-Key HID
-RGBLIGHT_ENABLE = no        # Enable WS2812 RGB underlight. 
+RGBLIGHT_ENABLE = yes       # Enable WS2812 RGB underlight. 
 SWAP_HANDS_ENABLE = no      # Enable one-hand typing
 TERMINAL_ENABLE = no        # Enable interactive terminal. Takes up a lot of space!
 AUTO_SHIFT_ENABLE=no
@@ -34,6 +33,10 @@ LEADER_ENABLE = yes         # Enable Leader Key
 
 COMBO_ENABLE = no           # Used to allow chording of keys to trigger an action
 TAP_DANCE_ENABLE = yes       # Used to allow multiple taps of a key to perform different actions
+
+# We could save a few bytes by either falling back on UNICODE_ENABLE and using send_unicode_string()
+UNICODE_ENABLE = no         # Basic Unicode Support
+UNICODEMAP_ENABLE = yes     # Enable Unicode Map Support. <930ish Bytes>      https://docs.qmk.fm/#/feature_unicode?id=unicode-map  
 
 LTO_ENABLE = yes            # Reduces the compiled firmware size
 # EXTRAFLAGS += -flto         # https://thomasbaart.nl/2018/12/01/reducing-firmware-size-in-qmk/
@@ -50,8 +53,8 @@ SRC +=  leader.c \
 
 
 # If you want to change the display of OLED, you need to change here
-SRC +=  ./lib/rgb_state_reader.c \
-        ./lib/logo_reader.c \
+SRC +=  ./lib/logo_reader.c \
+        # ./lib/rgb_state_reader.c \
         # ./lib/keylogger.c \
         # ./lib/timelogger.c \
         # ./lib/mode_icon_reader.c \

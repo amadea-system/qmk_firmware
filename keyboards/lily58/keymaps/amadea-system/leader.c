@@ -36,8 +36,8 @@ void matrix_scan_user(void) {
 
 
     // -- Proxy Tags -- //
-    // SEQ_ONE_KEY(KC_R) { SEND_STRING("{ "); }  //Luna
     SEQ_ONE_KEY(KC_R) { SEND_STRING("Luna\\ "); }  //Luna
+    SEQ_ONE_KEY(KC_L) { send_unicode_string("🌙"); SEND_STRING(" "); }  //Luna
     SEQ_ONE_KEY(KC_F) { SEND_STRING("/f "); } //Fluttershy
     
 

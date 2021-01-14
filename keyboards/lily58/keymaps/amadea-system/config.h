@@ -59,6 +59,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define AUTO_SHIFT_TIMEOUT 160
 #define AUTO_SHIFT_REPEAT 
 // #define NO_AUTO_SHIFT_NUMERIC
+ 
+// -- Unicode config --
+#define UNICODE_SELECTED_MODES UC_WINC
+
+// -- Debug Config --
+#define DEBUG_MATRIX_SCAN_RATE
 
 
 // Underglow
