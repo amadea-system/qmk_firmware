@@ -68,17 +68,25 @@ void render_default_layer_state(void) {
     // snprintf(layer_num_buff, sizeof(layer_num_buff), "%-5ld", layer_state);
     // oled_write(layer_num_buff, false);
 
-    char layer_bin_num[32];
-    char layer_bin_num_buff[12];
+    // Old implementation with snprintf used 1728 bytes 
 
-    itoa(layer_state, layer_bin_num,2);
-    strrev(layer_bin_num);
-    snprintf(layer_bin_num_buff, sizeof(layer_bin_num_buff), "%-10s", layer_bin_num);
-    oled_write(layer_bin_num_buff, false);        
+    // This section: 146 Bytes
+    char layer_bin_num[32] = {0};
+    itoa(layer_state, layer_bin_num,2);  // 90 bytes
+    strrev(layer_bin_num);  // 6 bytes
 
+    // 42 Bytes
+    for (int8_t i = 0; i < 10; i++)
+    {
+            if (layer_bin_num[i] == '0' || layer_bin_num[i] == '1'){
+                oled_write_char(layer_bin_num[i], false);
+            }else{
+                oled_write_char(' ', false);
+            }
+    } 
 }
 
-void render_mod_status(uint8_t modifiers) {
+void render_mod_status(uint8_t modifiers) {  // 108 bytes
     oled_write_ln_P(PSTR("Mods"), false);
     oled_write_P(PSTR(" "), false);
     oled_write_P(PSTR("S"), (modifiers & MOD_MASK_SHIFT));

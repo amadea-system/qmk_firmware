@@ -38,6 +38,35 @@
 extern uint8_t is_master;
 
 
+// --- Unicode Map --- //
+enum unicode_names {
+    MOON,
+    BUTTERFLY,
+    SMILE_CAT
+};
+
+const uint32_t PROGMEM unicode_map[] = {
+    [MOON] = 0x1F319,      //🌙
+    [BUTTERFLY] = 0x1F98B, //🦋
+    [SMILE_CAT] = 0x1F63A  //😺
+};
+
+#ifdef UNICODEMAP_ENABLE
+  #define E_MOON X(MOON)
+  #define E_BFLY X(BUTTERFLY)
+  #define E_S_CAT X(SMILE_CAT)
+#else
+  // #ifdef UNICODE_ENABLE
+    #define E_MOON XXXXXXX
+    #define E_BFLY XXXXXXX
+    #define E_S_CAT XXXXXXX
+  // #endif
+#endif
+
+// ------------------- //
+
+
+
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
 /* QWERTY
@@ -75,7 +104,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * ,-----------------------------------------.                    ,-----------------------------------------.
  * |      |      |      |      |      |      |                    |      |      |      |      |      |      |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
- * |  F1  |  F2  |  F3  |  F4  |  F5  |  F6  |                    |  F7  |  F8  |  F9  | F10  | F11  | F12  |
+ * |  F1  |  F2  |  F3  |  F4  |  F5  |  F6  |                    |  F7  |  F8  |  F9  | F10  | F11  | F12  |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
  * |      |   !  |   @  |   #  |   $  |   %  |-------.    ,-------|   ^  |   &  |   *  |   (  |   )  |   -  |
  * |------+------+------+------+------+------|   [   |    |    ]  |------+------+------+------+------+------|
@@ -112,11 +141,11 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
 /* RAISE - Acessed by pressing 'Raise' Key
  * ,-----------------------------------------.                    ,-----------------------------------------.
- * |      |      |      |      |      |      |                    |      |      |      |      |      |      |
+ * |      |  🌙  |  🦋 |  😺 |      |      |                    |      |      |      |      |      |      |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
  * |   `  |   1  |   2  |   3  |   4  |   5  |                    |   6  |   7  |   8  |   9  |   0  |      |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
- * |  F1  |  F2  |  F3  |  F4  |  F5  |  F6  |-------.    ,-------|      | Left | Down |  Up  |Right |      |
+ * |  F1  |  F2  |  F3  |  F4  |  F5  |  F6  |-------.    ,-------|      | Left | Down |  Up  |Right |      |
  * |------+------+------+------+------+------|   [   |    |    ]  |------+------+------+------+------+------|
  * |  F7  |  F8  |  F9  | F10  | F11  | F12  |-------|    |-------|   +  |   -  |   =  |   [  |   ]  |   \  |
  * `-----------------------------------------/       /     \      \-----------------------------------------'
@@ -136,9 +165,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 */
 
 [_RAISE] = LAYOUT( \
-  XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,                     XXXXXXX, XXXXXXX,       XXXXXXX,       XXXXXXX,       XXXXXXX, KC_AUDIO_VOL_UP, \
+  XXXXXXX, E_MOON,  E_BFLY,  E_S_CAT, XXXXXXX, XXXXXXX,                     XXXXXXX, XXXXXXX,       XXXXXXX,       XXXXXXX,       XXXXXXX, KC_AUDIO_VOL_UP, \
   XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,                     XXXXXXX, XXXXXXX,       LGUI(KC_UP),   XXXXXXX,       XXXXXXX, KC_AUDIO_VOL_DOWN, \
-  KC_F1,  KC_F2,    KC_F3,   KC_F4,   KC_F5,   KC_F6,                       XXXXXXX, LGUI(KC_LEFT), LGUI(KC_DOWN), LGUI(KC_RGHT), XXXXXXX, KC_AUDIO_MUTE, \
+  KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5,   KC_F6,                       XXXXXXX, LGUI(KC_LEFT), LGUI(KC_DOWN), LGUI(KC_RGHT), XXXXXXX, KC_AUDIO_MUTE, \
   KC_F7,   KC_F8,   KC_F9,   KC_F10,  KC_F11,  KC_F12,   _______, _______,  KC_PLUS, KC_MINS,       KC_EQL,        KC_LBRC,       KC_RBRC, KC_BSLS, \
                              _______, _______, _______,  _______, _______,  _______, KC_DEL, _______ \
 ),
@@ -227,6 +256,19 @@ KC_Z, KC_LCTRL,   KC_X,    KC_C,    KC_V,    KC_B,   KC_SPC,   KC_SPC, KC_N,    
 
 };
 
+
+void keyboard_post_init_user(void) {
+  // Customise these values to desired behaviour
+  debug_enable=true;
+
+  #ifdef RGBLIGHT_ENABLE
+    // rgblight_setrgb_range(0.5, 0.5, 0.5, 0, 5);
+    rgblight_enable_noeeprom(); // Enables RGB, without saving settings
+    rgblight_sethsv_noeeprom(HSV_PURPLE);
+    rgblight_mode_noeeprom(RGBLIGHT_MODE_STATIC_LIGHT);
+  #endif
+
+}
 
 // // Setting ADJUST layer RGB back to default
 // void update_tri_layer_RGB(uint8_t layer1, uint8_t layer2, uint8_t layer3) {
@@ -320,7 +362,7 @@ void oled_task_user(void) {
     // oled_write_ln(read_timelog(), false);
 
   } else {
-    oled_write(read_logo(), false);
+    oled_write(read_logo(), false);  // 98 bytes
   }
 }
 
