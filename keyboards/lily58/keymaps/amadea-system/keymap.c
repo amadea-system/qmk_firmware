@@ -259,7 +259,9 @@ KC_Z, KC_LCTRL,   KC_X,    KC_C,    KC_V,    KC_B,   KC_SPC,   KC_SPC, KC_N,    
 
 void keyboard_post_init_user(void) {
   // Customise these values to desired behaviour
-  // debug_enable=true;
+  #ifdef CONSOLE_ENABLE
+  debug_enable=true;
+  #endif
 
   #ifdef RGBLIGHT_ENABLE
     // rgblight_setrgb_range(0.5, 0.5, 0.5, 0, 5);

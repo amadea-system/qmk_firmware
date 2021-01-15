@@ -64,5 +64,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // -- Unicode config --
 #define UNICODE_SELECTED_MODES UC_WINC
 
+// -- OLED config --
+#define OLED_UPDATE_INTERVAL 50   // Sets the update rate of the OLED display in ms. Greatly improves the matrix scan rate.
+                                  
 // -- Debug Config --
 // #define DEBUG_MATRIX_SCAN_RATE
