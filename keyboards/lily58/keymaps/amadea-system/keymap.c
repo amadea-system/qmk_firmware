@@ -304,7 +304,7 @@ layer_state_t layer_state_set_user(layer_state_t state) {
     state = update_tri_layer_state(state, _RAISE, _LOWER, _ADJUST);
     return state;
 }
-  
+
 //SSD1306 OLED update loop, make sure to enable OLED_DRIVER_ENABLE=yes in rules.mk
 #ifdef OLED_DRIVER_ENABLE
 
@@ -346,7 +346,7 @@ void oled_task_user(void) {
     // If you want to change the display of OLED, you need to change here
 
     // Show modifier status
-    render_mod_status(get_mods());
+    render_mod_status(get_mods()|get_oneshot_mods());
 
     oled_set_cursor(0,4);  
     render_moon_logo();  //4 lines long
