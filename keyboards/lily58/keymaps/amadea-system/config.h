@@ -28,14 +28,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // #define MASTER_RIGHT
 // #define EE_HANDS
 
-// #define SSD1306OLED
-
 #define USE_SERIAL_PD2
 
 #define TAPPING_FORCE_HOLD
 #define TAPPING_TERM 100
 
-// -- Underglow config --
+// -- Underglow Config --
 #undef RGBLED_NUM
 #define RGBLED_NUM 10
 #undef RGBLIGHT_ANIMATIONS
@@ -52,11 +50,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #undef FORCE_NKRO
 #define FORCE_NKRO
 
-// Leader keys config
+// -- Leader Keys Config --
 #define LEADER_PER_KEY_TIMING
 #define LEADER_TIMEOUT 350  //  250
 
-//Auto Shift Config
+// -- One Shot Keys Config --
+// #define ONESHOT_TAP_TOGGLE 2  /* Tapping this number of times holds the key until tapped once again. */
+#define ONESHOT_TIMEOUT 2000  /* Time (in ms) before the one shot key is released */
+
+// -- Auto Shift Config --
 #define AUTO_SHIFT_TIMEOUT 160
 #define AUTO_SHIFT_REPEAT 
 // #define NO_AUTO_SHIFT_NUMERIC
