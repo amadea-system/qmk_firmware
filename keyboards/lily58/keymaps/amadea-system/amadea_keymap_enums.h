@@ -23,7 +23,7 @@ enum layer_number {
   _LOWER,
   _RAISE,
   _ADJUST,
-  _GAME,
+  _GAME_WASD,
   _GAME_ESDF,
 };
 
