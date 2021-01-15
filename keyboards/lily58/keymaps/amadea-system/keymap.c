@@ -37,21 +37,21 @@
 
 extern uint8_t is_master;
 
-
-// --- Unicode Map --- //
-enum unicode_names {
-    MOON,
-    BUTTERFLY,
-    SMILE_CAT
-};
-
-const uint32_t PROGMEM unicode_map[] = {
-    [MOON] = 0x1F319,      //🌙
-    [BUTTERFLY] = 0x1F98B, //🦋
-    [SMILE_CAT] = 0x1F63A  //😺
-};
-
 #ifdef UNICODEMAP_ENABLE
+  // --- Unicode Map --- //
+  enum unicode_names {
+      MOON,
+      BUTTERFLY,
+      SMILE_CAT
+  };
+
+  const uint32_t PROGMEM unicode_map[] = {
+      [MOON] = 0x1F319,      //🌙
+      [BUTTERFLY] = 0x1F98B, //🦋
+      [SMILE_CAT] = 0x1F63A  //😺
+  };
+
+
   #define E_MOON X(MOON)
   #define E_BFLY X(BUTTERFLY)
   #define E_S_CAT X(SMILE_CAT)
@@ -259,7 +259,7 @@ KC_Z, KC_LCTRL,   KC_X,    KC_C,    KC_V,    KC_B,   KC_SPC,   KC_SPC, KC_N,    
 
 void keyboard_post_init_user(void) {
   // Customise these values to desired behaviour
-  debug_enable=true;
+  // debug_enable=true;
 
   #ifdef RGBLIGHT_ENABLE
     // rgblight_setrgb_range(0.5, 0.5, 0.5, 0, 5);

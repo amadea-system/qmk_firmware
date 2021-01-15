@@ -35,16 +35,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define TAPPING_FORCE_HOLD
 #define TAPPING_TERM 100
 
-// #undef RGBLED_NUM
-// #define RGBLIGHT_ANIMATIONS
-// #define RGBLED_NUM 10 //27
-// #define RGBLIGHT_LIMIT_VAL 120
-// #define RGBLIGHT_HUE_STEP 10
-// #define RGBLIGHT_SAT_STEP 17
-// #define RGBLIGHT_VAL_STEP 17
+// -- Underglow config --
+#undef RGBLED_NUM
+#define RGBLED_NUM 10
+#undef RGBLIGHT_ANIMATIONS
+#define RGBLIGHT_LIMIT_VAL 120
+#define RGBLIGHT_HUE_STEP 10
+#define RGBLIGHT_SAT_STEP 17
+#define RGBLIGHT_VAL_STEP 17
 
-// #define RGBLIGHT_SPLIT 
-// #define RGBLED_SPLIT { 5, 5 }
+#define RGBLIGHT_SPLIT 
+#define RGBLED_SPLIT { 5, 5 }
 
 
 // Make sure NKRO is turned on
@@ -64,13 +65,4 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define UNICODE_SELECTED_MODES UC_WINC
 
 // -- Debug Config --
-#define DEBUG_MATRIX_SCAN_RATE
-
-
-// Underglow
-/*
-#undef RGBLED_NUM
-#define RGBLED_NUM 14    // Number of LEDs
-#define RGBLIGHT_ANIMATIONS
-#define RGBLIGHT_SLEEP
-*/
+// #define DEBUG_MATRIX_SCAN_RATE
