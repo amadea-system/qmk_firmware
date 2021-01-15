@@ -47,7 +47,7 @@ void render_default_layer_state(void) {
             oled_write_ln_P(PSTR("Mod"), false);
             oled_write_ln_P(PSTR(""), false);
             break;
-        case _GAME:
+        case _GAME_WASD:
             oled_write_ln_P(PSTR("Game"), false);
             oled_write_ln_P(PSTR("WASD"), true);
             break;
