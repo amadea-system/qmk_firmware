@@ -30,10 +30,31 @@ enum layer_number {
 
 enum custom_keycodes {
     VRSN = SAFE_RANGE,  // Prints out QMK Version Info
+    SW_HIBIKI,
+    SW_LUNA
 };
 
 
 enum custom_tap_dance_keycodes {
     TD_COMMA = 0,   // Left Brackets
     TD_DOT,         // Right Brackets
+};
+
+
+enum system_members {
+  MEM_SWITCHED_OUT = 0,
+  MEM_FLUTTERSHY,
+  MEM_HIBIKI,
+  MEM_LUNA
+};
+
+
+enum hid_commands {
+  CMD_DO_NOTHING = 0,  // Do Nothing
+
+  // CMDs Sent From PC
+  CMD_KB_SET_CURRENT_FRONTER = 1,
+
+  // CMDs Sent To PC
+  CMD_PC_SWITCH_FRONTER = 120,
 };

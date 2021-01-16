@@ -15,6 +15,9 @@
  */
 #include QMK_KEYBOARD_H
 #include "print.h"
+#include "raw_hid.h"
+
+#include "string.h" // For memcpy
 
 // Default Backlight Color
 #define DEFAULT_ARGB_COLOR HSV_PURPLE
@@ -37,6 +40,29 @@ enum {
 enum {
     TAPPY_KEY = 0
 };
+
+enum system_members {
+  MEM_SWITCHED_OUT = 0,
+  MEM_FLUTTERSHY,
+  MEM_HIBIKI,
+  MEM_LUNA
+};
+
+
+enum hid_commands {
+  CMD_DO_NOTHING = 0,  // Do Nothing
+
+  // CMDs Sent From PC
+  CMD_KB_SET_CURRENT_FRONTER = 1,
+
+  // CMDs Sent To PC
+  CMD_PC_SWITCH_FRONTER = 120,
+};
+
+// HID Vars
+bool hid_connected = false; // Flag indicating if we have a PC connection yet
+uint8_t current_fronter = MEM_SWITCHED_OUT;
+// static uint16_t hid_disconection_timer;
 
 
 //function to handle all the tap dances
@@ -187,6 +213,105 @@ void keyboard_post_init_user(void) {
 }
 
 
+// -- HID Code --
+
+
+#ifdef RGBLIGHT_ENABLE
+void set_rgblight_current_fronter(void){
+    switch (current_fronter) {
+        case MEM_SWITCHED_OUT:
+            rgblight_sethsv_noeeprom(HSV_WHITE);
+            break;
+        case MEM_FLUTTERSHY:
+            rgblight_sethsv_noeeprom(HSV_YELLOW);
+            break;
+        case MEM_HIBIKI:
+            rgblight_sethsv_noeeprom(HSV_PURPLE);
+            break;
+        case MEM_LUNA:
+            rgblight_sethsv_noeeprom(HSV_BLUE);
+            break;
+        case 255:
+            rgblight_sethsv_noeeprom(HSV_RED);
+            break;
+    }
+}
+#endif
+
+// void raw_hid_send_response(void) {
+//   // Send the current info screen index to the connected node script so that it can pass back the new data
+//   uint8_t send_data[32] = {0};
+//   uint8_t send_index = 0;
+//   send_data[send_index++] = 2;  // Indicating response back
+
+//   if(switch_fronter < 255){
+//     send_data[send_index++] = 1; // command byte describing what next bytes do. 0: Nothing, 1: Switch
+//     send_data[send_index++] = switch_fronter; // since the command byte was 1 (switch) this is the member who is switching.
+//     switch_fronter = 255;  // Reset varible back to idle state
+//   }
+  
+//   send_data[send_index++] = 251; // indicate end of response back.
+//   raw_hid_send(send_data, sizeof(send_data));
+// }
+
+
+void raw_hid_send_command(uint8_t command_id, uint8_t *data, uint8_t length) {
+/*
+* Sent HID Data Packet Format:
+* Byte 0: The Command Type
+* Byte 1: Length of Command Data
+* Byte 2-31: Command Data 
+*
+*/
+  uint8_t send_data[32] = {0};  // data packet must be 32 bytes on 8bit AVR platform
+  send_data[0] = command_id;
+  send_data[1] = length;
+  memcpy(&send_data[2], data, length);
+  raw_hid_send(send_data, sizeof(send_data));
+}
+
+
+void raw_hid_receive(uint8_t *data, uint8_t length) {
+/*
+* Received HID Data Packet Format:
+* Byte 0: The Command Type
+* Byte 1: Length of Command Data
+* Byte 2-31: Command Data 
+*
+* NOTE: The first byte sent from the PC (Report ID) does not equal the first byte here. The Report ID is not included here.
+*/
+  #ifdef CONSOLE_ENABLE
+//   uprintf("Data Recived: len: %u, Data: [%u, %u, %u, %u, %u, %u, %u, %u, ..., %u, %u]\n", length, data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[length-2], data[length-1]);
+  #endif
+  hid_connected = true; // PC connected
+//   hid_disconection_timer = timer_read();  // Reset the timeout timer
+
+  if (length >= 3) {
+    uint8_t *command_id     = &(data[0]);
+    // uint8_t *data_length = &(data[1]);
+    uint8_t *command_data   = &(data[2]);
+
+    switch(*command_id){
+      case CMD_DO_NOTHING:
+        break;
+      case CMD_KB_SET_CURRENT_FRONTER:
+        if(current_fronter != command_data[0]){
+            current_fronter = command_data[0];
+            #ifdef RGBLIGHT_ENABLE
+            set_rgblight_current_fronter();
+            #endif
+        }
+        break;
+      default:
+        // #todo have seperate error var 
+        current_fronter = 255; // Set current fronter = 255 to indicate CMD parse error.
+        break;
+    }
+  }
+}
+// ----------------
+
+
 //determine the current tap dance state
 int cur_dance (qk_tap_dance_state_t *state){
     if(state->count == 1){
@@ -306,7 +431,7 @@ layer_state_t layer_state_set_user(layer_state_t state) {
     switch (get_highest_layer(state)) {
         case _BASE:
             backlight_level(_BASE_BRIGHTNESS);
-            rgblight_sethsv_noeeprom(DEFAULT_ARGB_COLOR);  // Purple
+            set_rgblight_current_fronter(); // Purple
             writePinHigh(TX_LED);
             writePinHigh(RX_LED);
             print("RGB: Purple\n");

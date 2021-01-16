@@ -29,13 +29,19 @@
 
 #include "amadea_keymap_enums.h"
 #include "version.h"  // For the Version Macro
+#include "raw_hid.h"
+
 
 // #include "leader.c" // Include leader key definitions
 
-// #include "oled/layer_state_reader.c" // Not needed anymore. Replaced by render_default_layer_state(void) in keymap.c
-
 
 extern uint8_t is_master;
+
+// HID Vars
+uint8_t current_fronter = MEM_SWITCHED_OUT;
+bool hid_connected = false; // Flag indicating if we have a PC connection yet
+static uint16_t hid_disconection_timer;
+
 
 #ifdef UNICODEMAP_ENABLE
   // --- Unicode Map --- //
@@ -183,7 +189,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
 /* ADJUST - Acessed by pressing 'Lower' & 'Raise' Keys
  * ,-----------------------------------------.                    ,-----------------------------------------.
- * |Versio|      |L-WASD|L-ESDF|      |      |                    |      |      |      |      |      |RESET |
+ * |Versio|      |L-WASD|L-ESDF|      |      |                    |SW_Hib|SW_Lun|      |      |      |RESET |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
  * |      |      |      |      |      |      |                    |      |      |      |      |      |      |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
@@ -200,7 +206,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 #define TOG_WASD TG(_GAME_WASD)
 
 [_ADJUST] = LAYOUT( \
-VRSN,    XXXXXXX, TOG_WASD, TOG_ESDF, XXXXXXX, XXXXXXX,                   XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, RESET,   \
+VRSN,    XXXXXXX, TOG_WASD, TOG_ESDF, XXXXXXX, XXXXXXX,                   SW_HIBIKI, SW_LUNA, XXXXXXX, XXXXXXX, XXXXXXX, RESET,   \
 XXXXXXX, XXXXXXX, XXXXXXX,  XXXXXXX,  XXXXXXX, XXXXXXX,                   XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, \
 XXXXXXX, XXXXXXX, XXXXXXX,  XXXXXXX,  XXXXXXX, XXXXXXX,                   XXXXXXX, XXXXXXX, RGB_TOG, RGB_HUI, RGB_SAI, RGB_VAI, \
 XXXXXXX, XXXXXXX, XXXXXXX,  XXXXXXX,  XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, RGB_MOD, RGB_HUD, RGB_SAD, RGB_VAD, \
@@ -262,19 +268,137 @@ KC_Z, KC_LCTRL,   KC_X,    KC_C,    KC_V,    KC_B, KC_SPC,     KC_SPC, KC_N,    
 
 
 void keyboard_post_init_user(void) {
-  // Customise these values to desired behaviour
+  
   #ifdef CONSOLE_ENABLE
   debug_enable=true;
   #endif
 
   #ifdef RGBLIGHT_ENABLE
-    // rgblight_setrgb_range(0.5, 0.5, 0.5, 0, 5);
     rgblight_enable_noeeprom(); // Enables RGB, without saving settings
     rgblight_sethsv_noeeprom(HSV_PURPLE);
     rgblight_mode_noeeprom(RGBLIGHT_MODE_STATIC_LIGHT);
   #endif
 
 }
+
+// -- HID Code --
+
+#ifdef RGBLIGHT_ENABLE
+void set_rgblight_current_fronter(void){
+    switch (current_fronter) {
+        case MEM_SWITCHED_OUT:
+            rgblight_sethsv_noeeprom(HSV_WHITE);
+            break;
+        case MEM_FLUTTERSHY:
+            rgblight_sethsv_noeeprom(HSV_YELLOW);
+            break;
+        case MEM_HIBIKI:
+            rgblight_sethsv_noeeprom(HSV_PURPLE);
+            break;
+        case MEM_LUNA:
+            rgblight_sethsv_noeeprom(HSV_BLUE);
+            break;
+        case 255:
+            rgblight_sethsv_noeeprom(HSV_RED);
+            break;
+    }
+}
+#endif
+
+
+void raw_hid_send_command(uint8_t command_id, uint8_t *data, uint8_t length) {
+/*
+* Sent HID Data Packet Format:
+* Byte 0: The Command Type
+* Byte 1: Length of Command Data
+* Byte 2-31: Command Data 
+*
+*/
+  uint8_t send_data[32] = {0};  // data packet must be 32 bytes on 8bit AVR platform
+  send_data[0] = command_id;
+  send_data[1] = length;
+  memcpy(&send_data[2], data, length);
+  raw_hid_send(send_data, sizeof(send_data));
+}
+
+
+void raw_hid_receive(uint8_t *data, uint8_t length) {
+/*
+* Received HID Data Packet Format:
+* Byte 0: The Command Type
+* Byte 1: Length of Command Data
+* Byte 2-31: Command Data 
+*
+* NOTE: The first byte sent from the PC (Report ID) does not equal the first byte here. The Report ID is not included here.
+*/
+  #ifdef CONSOLE_ENABLE
+  // uprintf("Data Recived: len: %u, Data: [%u, %u, %u, %u, %u, %u, %u, %u, ..., %u, %u]\n", length, data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[length-2], data[length-1]);
+  #endif
+
+  hid_connected = true;       // PC connected
+  hid_disconection_timer = timer_read();  // Reset the timeout timer
+
+  if (length >= 3) {
+    uint8_t *command_id     = &(data[0]);
+    // uint8_t *data_length = &(data[1]);  // Future Use
+    uint8_t *command_data   = &(data[2]);
+
+    switch(*command_id){
+      case CMD_DO_NOTHING:  // Exists so we can keep the disconection timer alive.
+        break;
+      case CMD_KB_SET_CURRENT_FRONTER:
+        if(current_fronter != command_data[0]){
+            current_fronter = command_data[0];
+            #ifdef RGBLIGHT_ENABLE
+            set_rgblight_current_fronter();
+            #endif
+        }
+        break;
+      default:
+        // #todo have seperate error var 
+        current_fronter = 255; // Set current fronter = 255 to indicate CMD parse error.
+        break;
+    }
+  }
+  // raw_hid_send_response();
+}
+
+// All hid Timer code clocks in at approx 47 bytes
+bool check_hid_timeout(void){
+
+  if (!hid_connected || timer_elapsed(hid_disconection_timer) > 30000) {
+    hid_connected = false;
+    return false;
+  }
+  return true;
+}
+
+void render_current_fronter(void){
+  if (check_hid_timeout()){
+    switch (current_fronter) {
+      case MEM_SWITCHED_OUT:
+        oled_write_P(PSTR("Sleep"), false);
+        break;
+      case MEM_FLUTTERSHY:
+        oled_write_P(PSTR("FlShy"), false);
+        break;
+      case MEM_HIBIKI:
+        oled_write_P(PSTR("Hibik"), false);
+        break;
+      case MEM_LUNA:
+        oled_write_P(PSTR("Luna "), false);
+        break;
+      case 255:
+        oled_write_P(PSTR("Error"), false);
+        break;
+    }
+  }else{
+    oled_write_P(PSTR("Discn"), false);
+  }
+}
+
+
+// --------------
 
 // // Setting ADJUST layer RGB back to default
 // void update_tri_layer_RGB(uint8_t layer1, uint8_t layer2, uint8_t layer3) {
@@ -347,6 +471,9 @@ void oled_task_user(void) {
 
     // Show modifier status
     render_mod_status(get_mods()|get_oneshot_mods());
+    
+    // Show the current Fronter
+    render_current_fronter();
 
     oled_set_cursor(0,4);  
     render_moon_logo();  //4 lines long
@@ -381,9 +508,18 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
 
       // -- Macros --
+        uint8_t new_fronter;
 
         case VRSN:  // Prints out QMK Version Info
             SEND_STRING(QMK_KEYBOARD "/" QMK_KEYMAP " @ " QMK_VERSION "\nCompiled On " QMK_BUILDDATE "\n");
+            return false;
+        case SW_HIBIKI:
+            new_fronter = MEM_HIBIKI;
+            raw_hid_send_command(CMD_PC_SWITCH_FRONTER, &new_fronter, 1);
+            return false;
+        case SW_LUNA:
+            new_fronter = MEM_LUNA;
+            raw_hid_send_command(CMD_PC_SWITCH_FRONTER, &new_fronter, 1);
             return false;
     }
   }
