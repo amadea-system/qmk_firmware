@@ -16,5 +16,7 @@ BOOTLOADER = caterina
 TAP_DANCE_ENABLE = yes
 BACKLIGHT_ENABLE = yes      # Enable keyboard backlight functionality
 RGBLIGHT_ENABLE = yes  		# Enable WS2812 RGB underlight. 
+RAW_ENABLE = yes            # 204 Bytes
+CONSOLE_ENABLE = no
 
 EXTRAFLAGS += -flto         # https://thomasbaart.nl/2018/12/01/reducing-firmware-size-in-qmk/

@@ -87,7 +87,7 @@ void render_default_layer_state(void) {
 }
 
 void render_mod_status(uint8_t modifiers) {  // 108 bytes
-    oled_write_ln_P(PSTR("Mods"), false);
+    // oled_write_ln_P(PSTR("Mods"), false);
     oled_write_P(PSTR(" "), false);
     oled_write_P(PSTR("S"), (modifiers & MOD_MASK_SHIFT));
     oled_write_P(PSTR("C"), (modifiers & MOD_MASK_CTRL));

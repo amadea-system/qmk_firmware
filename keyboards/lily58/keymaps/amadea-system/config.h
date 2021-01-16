@@ -20,6 +20,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#undef MANUFACTURER
+#define MANUFACTURER Amadea
+
+// #undef VENDOR_ID   
+// #define VENDOR_ID       0x04D9
+
+// #undef PRODUCT_ID  
+// #define PRODUCT_ID      0xEB2E
+
+// #undef DEVICE_VER
+// #define DEVICE_VER      0x0100
+
 //#define USE_MATRIX_I2C
 
 /* Select hand configuration */

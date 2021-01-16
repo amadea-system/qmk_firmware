@@ -15,13 +15,13 @@ BOOTLOADER = atmel-dfu
 #
 BOOTMAGIC_ENABLE = no       # Virtual DIP switch configuration
 MOUSEKEY_ENABLE = no        # Mouse keys
-CONSOLE_ENABLE = no         # Console for debug
+CONSOLE_ENABLE = yes         # Console for debug
 COMMAND_ENABLE = no         # Commands for debug and configuration
 BACKLIGHT_ENABLE = no       # Enable keyboard backlight functionality
 MIDI_ENABLE = no            # MIDI controls
 AUDIO_ENABLE = no           # Audio output on port C6
 BLUETOOTH_ENABLE = no       # Enable Bluetooth with the Adafruit EZ-Key HID
-RGBLIGHT_ENABLE = yes       # Enable WS2812 RGB underlight. 
+RGBLIGHT_ENABLE = no       # Enable WS2812 RGB underlight. 
 SWAP_HANDS_ENABLE = no      # Enable one-hand typing
 TERMINAL_ENABLE = no        # Enable interactive terminal. Takes up a lot of space!
 AUTO_SHIFT_ENABLE = no
@@ -34,6 +34,7 @@ LEADER_ENABLE = yes         # Enable Leader Key
 
 COMBO_ENABLE = no           # Used to allow chording of keys to trigger an action
 TAP_DANCE_ENABLE = yes      # Used to allow multiple taps of a key to perform different actions
+RAW_ENABLE = yes            # 204 Bytes
 
 # We could save a few bytes by either falling back on UNICODE_ENABLE and using send_unicode_string()
 UNICODE_ENABLE = no         # Basic Unicode Support
