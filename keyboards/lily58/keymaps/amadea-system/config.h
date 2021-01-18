@@ -43,19 +43,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define USE_SERIAL_PD2
 
 #define TAPPING_FORCE_HOLD  // This will prevent ONESHOT_TAP_TOGGLE from functioning.
-#define TAPPING_TERM 100
+#define TAPPING_TERM 200//100
 
 // -- Underglow Config --
+
+
+
 #undef RGBLED_NUM
-#define RGBLED_NUM 10
+#define RGBLED_NUM 12
+#define RGBLED_SPLIT { 6, 6 }
+
+#define RGBLIGHT_SPLIT 
 #undef RGBLIGHT_ANIMATIONS
 #define RGBLIGHT_LIMIT_VAL 200 //120
 #define RGBLIGHT_HUE_STEP 10
 #define RGBLIGHT_SAT_STEP 17
 #define RGBLIGHT_VAL_STEP 17
 
-#define RGBLIGHT_SPLIT 
-#define RGBLED_SPLIT { 6, 6 }
 
 
 // Make sure NKRO is turned on

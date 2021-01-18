@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // ARGB Underlight Config
 #undef RGBLED_NUM
-#define RGBLED_NUM 5
+#define RGBLED_NUM 10
 #define RGB_DI_PIN F4
 #define RGBLIGHT_LIMIT_VAL 150
 
