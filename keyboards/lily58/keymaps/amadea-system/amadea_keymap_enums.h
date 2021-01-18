@@ -22,6 +22,7 @@ enum layer_number {
   _QWERTY = 0,
   _LOWER,
   _RAISE,
+  // _MACROS,
   _ADJUST,
   _GAME_WASD,
   _GAME_ESDF,
@@ -36,8 +37,9 @@ enum custom_keycodes {
 
 
 enum custom_tap_dance_keycodes {
-    TD_COMMA = 0,   // Left Brackets
-    TD_DOT,         // Right Brackets
+    TD_LBRK = 0,   // Left Brackets
+    TD_RBRK,       // Right Brackets
+    TD_MINUS_EQL   // Minus / Equal & Plus
 };
 
 
