@@ -56,5 +56,6 @@ enum hid_commands {
   CMD_KB_SET_CURRENT_FRONTER = 1,
 
   // CMDs Sent To PC
-  CMD_PC_SWITCH_FRONTER = 120,
+  CMD_PC_SWITCH_FRONTER = 120,  // Use PK API To switch fronters
+  CMD_PC_NOTIFY_LAYER_CHANGE = 121  // Notifiy the PC that the current active layer has changed
 };
