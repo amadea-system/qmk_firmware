@@ -42,20 +42,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #define USE_SERIAL_PD2
 
-#define TAPPING_FORCE_HOLD
+#define TAPPING_FORCE_HOLD  // This will prevent ONESHOT_TAP_TOGGLE from functioning.
 #define TAPPING_TERM 100
 
 // -- Underglow Config --
 #undef RGBLED_NUM
 #define RGBLED_NUM 10
 #undef RGBLIGHT_ANIMATIONS
-// #define RGBLIGHT_LIMIT_VAL 120
+#define RGBLIGHT_LIMIT_VAL 200 //120
 #define RGBLIGHT_HUE_STEP 10
 #define RGBLIGHT_SAT_STEP 17
 #define RGBLIGHT_VAL_STEP 17
 
 #define RGBLIGHT_SPLIT 
-#define RGBLED_SPLIT { 5, 5 }
+#define RGBLED_SPLIT { 6, 6 }
 
 
 // Make sure NKRO is turned on
@@ -80,6 +80,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // -- OLED config --
 #define OLED_UPDATE_INTERVAL 50   // Sets the update rate of the OLED display in ms. Greatly improves the matrix scan rate.
-                                  
+
+// -- Combo Config --
+#define COMBO_TERM 300  // Sets the time out period for combos.
+
 // -- Debug Config --
 // #define DEBUG_MATRIX_SCAN_RATE
+
+
+/* Disable unused and unneeded features to reduce on firmware size */
+#ifdef LOCKING_SUPPORT_ENABLE
+#    undef LOCKING_SUPPORT_ENABLE
+#endif
+#ifdef LOCKING_RESYNC_ENABLE
+#    undef LOCKING_RESYNC_ENABLE
+#endif
