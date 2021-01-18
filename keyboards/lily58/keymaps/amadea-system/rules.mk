@@ -15,7 +15,7 @@ BOOTLOADER = atmel-dfu
 #
 BOOTMAGIC_ENABLE = no       # Virtual DIP switch configuration
 MOUSEKEY_ENABLE = no        # Mouse keys
-CONSOLE_ENABLE = yes         # Console for debug
+CONSOLE_ENABLE = no         # Console for debug
 COMMAND_ENABLE = no         # Commands for debug and configuration
 BACKLIGHT_ENABLE = no       # Enable keyboard backlight functionality
 MIDI_ENABLE = no            # MIDI controls
@@ -32,7 +32,7 @@ OLED_DRIVER_ENABLE = yes    # OLED display
 LEADER_ENABLE = yes         # Enable Leader Key
 # HAPTIC_ENABLE += DRV2605L
 
-COMBO_ENABLE = no           # Used to allow chording of keys to trigger an action
+COMBO_ENABLE = yes          # Used to allow chording of keys to trigger an action. 200 Bytes
 TAP_DANCE_ENABLE = yes      # Used to allow multiple taps of a key to perform different actions
 RAW_ENABLE = yes            # 204 Bytes
 
