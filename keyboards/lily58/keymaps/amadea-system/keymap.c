@@ -426,6 +426,9 @@ layer_state_t layer_state_set_user(layer_state_t state) {
 
     // Activate ADJUST layer when LOWER & UPPER are active
     state = update_tri_layer_state(state, _RAISE, _LOWER, _ADJUST);
+
+    // Send notification MSG to connected PC of layer state
+    raw_hid_send_command(CMD_PC_NOTIFY_LAYER_CHANGE, (uint8_t *)&state, sizeof(state));
     return state;
 }
 
