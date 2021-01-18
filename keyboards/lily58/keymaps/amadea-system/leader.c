@@ -65,24 +65,28 @@ void matrix_scan_user(void) {
     SEQ_TWO_KEYS(KC_E, KC_T) { SEND_STRING(":TsuTail:"); }       // TsuTail
     SEQ_TWO_KEYS(KC_E, KC_H) { SEND_STRING(":hibiki_happy:"); }  // Hibiki_Happy
     SEQ_TWO_KEYS(KC_E, KC_S) { SEND_STRING(":TsuTired:"); }      // TsuTired
-    SEQ_TWO_KEYS(KC_E, KC_D) { SEND_STRING(":dabmikudab:"); }      // Dabbing Miku
+    SEQ_TWO_KEYS(KC_E, KC_D) { SEND_STRING(":dabmikudab:"); }    // Dabbing Miku
 
     // -- Images -- //
     
     SEQ_TWO_KEYS(KC_S, KC_T) {
       if(current_fronter == MEM_LUNA){
-        SEND_STRING("https://i.imgur.com/vVZW8H6.jpg"); // Exhausted Woona
+        SEND_STRING("Luna\\ https://i.imgur.com/vVZW8H6.jpg"); // Exhausted Woona
       }else{
         SEND_STRING(":TsuTired:");
       }
     }     
 
     // -- Web Browsers -- //
-    SEQ_ONE_KEY(KC_BSPC) { SEND_STRING(SS_TAP(X_WBAK)); }  // Go back
+    // SEQ_ONE_KEY(KC_BSPC) { SEND_STRING(SS_TAP(X_WBAK)); }  // Go back
     SEQ_ONE_KEY(KC_B) { SEND_STRING(SS_TAP(X_WBAK)); }     // Go back
     SEQ_TWO_KEYS(KC_R, KC_T) {SEND_STRING(SS_LCTRL(SS_LSFT("t")));}  // Open closed tab (CTRL+Shift+T)
     SEQ_TWO_KEYS(KC_C, KC_N) {SEND_STRING(SS_LCTL("c") SS_DELAY(250) SS_LCTL("t") SS_DELAY(250) SS_LCTL("v") SS_DELAY(250) SS_TAP(X_ENTER) );}  // Copies, Pastes, Open's in new tab (CTRL+Shift+T)
     
+    // -- Other -- //
+    SEQ_ONE_KEY(KC_BSPC) {
+      SEND_STRING(SS_LCTL(SS_LSFT(SS_TAP(X_LEFT)))SS_TAP(X_BSPC));  // Delete Word
+    }
 
     // -- QMK Features -- //
 
