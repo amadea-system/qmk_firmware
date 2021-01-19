@@ -83,23 +83,23 @@ void tk_reset(qk_tap_dance_state_t *state, void *user_data);
 // Status LED Brightness
 enum status_led_brightness_enum {
     _BASE_BRIGHTNESS = 1,
-    _FN_LAYER_BRIGHTNESS = 8,
-    _ML_LAYER_BRIGHTNESS = 16,
+    _FUNCTION_LAYER_BRIGHTNESS = 8,
+    _MEDIA_LAYER_BRIGHTNESS = 16,
 };
 
 
 // Layer Definitions
 enum layer_number {
   _BASE = 0,
-  _FN0,
-  _ML1,
+  _FUNCTION,
+  _MEDIA,
   _RGB_LAYER
 };
 
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
-    /* Base Layer
+    /* Base Layer  (Fronter colored)
     * ,--------------------.
     * |TapDan| Home | PgUp |
     * |------+------+------|
@@ -120,7 +120,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
                  KC_LEFT,   KC_DOWN,    KC_RIGHT),
 
 
-    /* function layer 
+    /* function layer - Accessed with a Single Tap
     * ,--------------------.
     * |______| Mute | VolUp|
     * |------+------+------|
@@ -132,7 +132,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     * |______|______|______|
     * '--------------------'
     */
-    [_FN0] = LAYOUT(/* function layer */
+    [_FUNCTION] = LAYOUT(/* function layer */
                  KC_TRNS,   KC_MUTE,    KC_VOLU,
                  KC_ENTER,  KC_MUTE,    KC_VOLD,
                  
@@ -140,7 +140,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
                  KC_TRNS,   KC_TRNS,    KC_TRNS),
 
 
-    /* media function layer 
+    /* media function layer - Accessed with a Single Hold
     * ,--------------------.
     * |______| Reset| VolUp|
     * |------+------+------|
@@ -152,7 +152,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     * |  <<  | Play |  >>  |
     * '--------------------'
     */
-    [_ML1] = LAYOUT(/* media function layer, toggled on a single tap */
+    [_MEDIA] = LAYOUT(/* media function layer, toggled on a single tap */
                  KC_TRNS,   RESET  ,    KC_VOLU, 
                  KC_MUTE,   KC_TRNS,    KC_VOLD,
                  
@@ -348,9 +348,9 @@ void tk_finished(qk_tap_dance_state_t *state, void *user_data){
         case SINGLE_TAP:
             //send desired key when tapped:
             //setting to the media layer
-            if(layer_state_is(_ML1)){
+            if(layer_state_is(_MEDIA)){
                 //if already active, toggle it to off
-                layer_off(_ML1);
+                layer_off(_MEDIA);
                 xprintf("Turning Off Media Layer\n");
                 //turn off the indicator LED
                 //set LED HI to turn it off
@@ -360,7 +360,7 @@ void tk_finished(qk_tap_dance_state_t *state, void *user_data){
 
             } else {
                 //turn on the media layer
-                layer_move(_ML1);
+                layer_move(_MEDIA);
                 xprintf("Turning On Media Layer\n");
                 //turn on the indicator LED
                 //set LED pin to LOW to turn it on
@@ -372,8 +372,8 @@ void tk_finished(qk_tap_dance_state_t *state, void *user_data){
         case SINGLE_HOLD:
             //set to desired layer when held:
             //setting to the function layer
-            layer_on(_FN0);
-            xprintf("Turning On FN Layer\n");
+            layer_on(_FUNCTION);
+            xprintf("Turning On Function Layer\n");
             break;
 
         case DOUBLE_TAP:
@@ -412,7 +412,7 @@ void tk_finished(qk_tap_dance_state_t *state, void *user_data){
 void tk_reset(qk_tap_dance_state_t *state, void *user_data){
     //if held and released, leave the layer
     if(tk_tap_state.state == SINGLE_HOLD){
-        layer_off(_FN0);
+        layer_off(_FUNCTION);
     }
     //reset the state
     tk_tap_state.state = 0; 
@@ -436,15 +436,15 @@ layer_state_t layer_state_set_user(layer_state_t state) {
             writePinHigh(RX_LED);
             print("RGB: Purple\n");
             break;
-        case _FN0:
-            backlight_level(_FN_LAYER_BRIGHTNESS);
+        case _FUNCTION:
+            backlight_level(_FUNCTION_LAYER_BRIGHTNESS);
             rgblight_sethsv_noeeprom(HSV_BLUE);
             writePinHigh(TX_LED);
             writePinHigh(RX_LED);
             print("RGB: Blue\n");
             break;
-        case _ML1:
-            backlight_level(_ML_LAYER_BRIGHTNESS);
+        case _MEDIA:
+            backlight_level(_MEDIA_LAYER_BRIGHTNESS);
             rgblight_sethsv_noeeprom(HSV_YELLOW);
             writePinHigh(TX_LED);
             writePinHigh(RX_LED);
