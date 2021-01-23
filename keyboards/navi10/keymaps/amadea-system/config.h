@@ -33,7 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define RGB_DI_PIN F4
 #define RGBLIGHT_LIMIT_VAL 150
 
-// #define RGBLIGHT_ANIMATIONS
+#define RGBLIGHT_ANIMATIONS
 
 
 
