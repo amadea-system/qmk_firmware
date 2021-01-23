@@ -16,32 +16,22 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 #pragma once
 
-enum layer_number {
-    _QWERTY = 0,
-    _LOWER,
-    _RAISE,
-    // _MACROS,
-    _ADJUST,
-    _GAME_WASD,
-    _GAME_ESDF,
+//tap dance states
+enum tap_dance_state {
+    SINGLE_TAP = 1,
+    SINGLE_HOLD = 2,
+    DOUBLE_TAP = 3,
+    TRIPLE_TAP = 4,
+    TRIPLE_HOLD = 5
 };
 
-
-enum custom_keycodes {
-    VRSN = SAFE_RANGE,  // Prints out QMK Version Info
-    SW_HIBIKI,
-    SW_LUNA
+//tap dance keys
+enum tap_dance_keycodes{
+    TAPPY_KEY = 0
 };
-
-
-enum custom_tap_dance_keycodes {
-    TD_LBRK = 0,   // Left Brackets
-    TD_RBRK,       // Right Brackets
-    TD_MINUS_EQL   // Minus / Equal & Plus
-};
-
 
 enum system_members {
     MEM_SWITCHED_OUT = 0,
@@ -53,13 +43,12 @@ enum system_members {
 
 enum hid_commands {
     CMD_DO_NOTHING = 0,  // Do Nothing
-    
+
     // CMDs Sent From PC
     CMD_KB_SET_CURRENT_FRONTER = 1,
     CMD_KB_SET_ALL_RGB_LEDS,
     CMD_KB_SET_RGB_LEDS,
-    
-    
+
     // CMDs Sent To PC
     CMD_PC_RAW_DEBUG_MSG = 120,
     CMD_PC_DEBUG_MSG,
