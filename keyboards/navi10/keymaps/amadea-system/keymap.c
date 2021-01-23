@@ -19,6 +19,9 @@
 
 #include "string.h" // For memcpy
 
+#include "navi10_keymap_enums.h"
+
+
 // Default Backlight Color
 #define DEFAULT_ARGB_COLOR HSV_PURPLE
 
@@ -28,42 +31,37 @@ typedef struct {
     int state;
 } tap;
 
-//tap dance states
-enum {
-    SINGLE_TAP = 1,
-    SINGLE_HOLD = 2,
-    DOUBLE_TAP = 3,
-    TRIPLE_TAP = 4
-};
 
-//tap dance keys
-enum {
-    TAPPY_KEY = 0
-};
-
-enum system_members {
-  MEM_SWITCHED_OUT = 0,
-  MEM_FLUTTERSHY,
-  MEM_HIBIKI,
-  MEM_LUNA
-};
+typedef struct {
+    uint8_t hue;
+    uint8_t sat;
+}fav_color;
 
 
-enum hid_commands {
-  CMD_DO_NOTHING = 0,  // Do Nothing
+// static fav_color fav_colors[4] = {
+//     { 0, 0 },       // Switched out. WHITE
+//     { 43, 255 },    // Fluttershy. YELLOW
+//     { 191, 255 },   // Hibiki. PURPLE
+//     { 170, 255 }    // Luna. BLUE
+// };
+// struct fav_color fav_colors[4];
+ 
+// fav_colors[MEM_SWITCHED_OUT] = struct fav_color { 0, 0 }; // Switched out. WHITE
+// fav_colors[MEM_FLUTTERSHY] = fav_color { 43, 255 };    // Fluttershy. YELLOW
+// fav_colors[MEM_HIBIKI] = fav_color { 191, 255 };   // Hibiki. PURPLE
+// fav_colors[MEM_LUNA] = fav_color { 170, 255 };   // Luna. BLUE
 
-  // CMDs Sent From PC
-  CMD_KB_SET_CURRENT_FRONTER = 1,
-
-  // CMDs Sent To PC
-  CMD_PC_SWITCH_FRONTER = 120,
-};
+uint8_t fronter_led_range_start = 4;
+uint8_t fronter_led_range_end = 5;
 
 // HID Vars
 bool hid_connected = false; // Flag indicating if we have a PC connection yet
 uint8_t current_fronter = MEM_SWITCHED_OUT;
 // static uint16_t hid_disconection_timer;
 
+// --- Function Defs ---
+// void send_hid_debug(uint8_t *data);
+void raw_hid_send_command(uint8_t command_id, uint8_t *data, uint8_t length);
 
 //function to handle all the tap dances
 int cur_dance(qk_tap_dance_state_t *state);
@@ -77,8 +75,8 @@ void tk_reset(qk_tap_dance_state_t *state, void *user_data);
 // https://cdn.sparkfun.com/assets/9/c/3/c/4/523a1765757b7f5c6e8b4567.png
 // #define INDICATOR_LED   B5
 
-#define TX_LED          D5
-#define RX_LED          B0
+#define TX_LED   D5
+#define RX_LED   B0
 
 // Status LED Brightness
 enum status_led_brightness_enum {
@@ -90,10 +88,10 @@ enum status_led_brightness_enum {
 
 // Layer Definitions
 enum layer_number {
-  _BASE = 0,
-  _FUNCTION,
-  _MEDIA,
-  _RGB_LAYER
+    _BASE = 0,
+    _FUNCTION,
+    _MEDIA,
+    _RGB_LAYER
 };
 
 
@@ -113,14 +111,14 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     */
 
     [_BASE] = LAYOUT(/* Base */
-                 TD(TAPPY_KEY),KC_HOME, KC_PGUP,
-                 KC_DEL,    KC_END,     KC_PGDN,
+             TD(TAPPY_KEY), KC_HOME,  KC_PGUP,
+                 KC_DEL,    KC_END,   KC_PGDN,
                  
                             KC_UP,
-                 KC_LEFT,   KC_DOWN,    KC_RIGHT),
+                 KC_LEFT,   KC_DOWN,  KC_RIGHT),
 
 
-    /* function layer - Accessed with a Single Tap
+    /* function layer - Accessed with a Single Hold - Pink
     * ,--------------------.
     * |______| Mute | VolUp|
     * |------+------+------|
@@ -133,14 +131,14 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     * '--------------------'
     */
     [_FUNCTION] = LAYOUT(/* function layer */
-                 KC_TRNS,   KC_MUTE,    KC_VOLU,
-                 KC_ENTER,  KC_MUTE,    KC_VOLD,
+                 KC_TRNS,   KC_VOLU,    XXXXXXX,
+                 XXXXXXX,   KC_VOLD,    KC_MUTE,
                  
                             KC_TRNS,
                  KC_TRNS,   KC_TRNS,    KC_TRNS),
 
 
-    /* media function layer - Accessed with a Single Hold
+    /* media function layer - Accessed with a Single Tap  - Yellow
     * ,--------------------.
     * |______| Reset| VolUp|
     * |------+------+------|
@@ -153,30 +151,31 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     * '--------------------'
     */
     [_MEDIA] = LAYOUT(/* media function layer, toggled on a single tap */
-                 KC_TRNS,   RESET  ,    KC_VOLU, 
-                 KC_MUTE,   KC_TRNS,    KC_VOLD,
+                 KC_TRNS,   KC_VOLU,    XXXXXXX, 
+                 XXXXXXX,   KC_VOLD,    KC_MUTE,
                  
                             KC_SPC ,
                  KC_MRWD,   KC_MPLY,    KC_MFFD),
 
-    /* RGB layer 
+
+    /* RGB layer, toggled on a double tap  - White
     * ,--------------------.
-    * |______|toggle| Mode |
+    * |______| Hue+ |Brght+|
     * |------+------+------|
-    * | Hue  | Sat  | Vibr |
+    * | Hue  | Hue- |Brght-|
     * \--------------------/
     *        '------'
-    *        |______|
+    *        | SAT+ |
     * '------+------+------'
-    * |______|______|______|
+    * | Mode | SAT- |______|
     * '--------------------'
     */
     [_RGB_LAYER] = LAYOUT(/* RGB layer */
-                 KC_TRNS,   RGB_TOG,    RGB_MOD,
-                 RGB_HUI,   RGB_SAI,    RGB_VAI,
+                 KC_TRNS,   RGB_HUI,    RGB_VAI,
+                 RGB_TOG,   RGB_HUD,    RGB_VAD,
                  
-                            KC_TRNS,
-                 KC_TRNS,   KC_TRNS,    KC_TRNS),
+                            RGB_SAI,
+                 RGB_MOD,   RGB_SAD,    KC_TRNS),
 
 };
 
@@ -215,6 +214,10 @@ void keyboard_post_init_user(void) {
 
 // -- HID Code --
 
+// void send_hid_debug(uint8_t *data){
+//     raw_hid_send_command(CMD_PC_RAW_DEBUG_MSG, *data, sizeof(data))
+
+// }
 
 #ifdef RGBLIGHT_ENABLE
 void set_rgblight_current_fronter(void){
@@ -236,6 +239,71 @@ void set_rgblight_current_fronter(void){
             break;
     }
 }
+
+// void set_rgblight_current_fronter(void){
+    
+//     if(current_fronter >= 4){
+//         rgblight_sethsv_noeeprom(fav_colors[current_fronter].hue, fav_colors[current_fronter].sat, 255);
+//     }else{
+//         rgblight_sethsv_noeeprom(HSV_RED);
+//     }
+// }
+
+// Sets all LEDs to the single HSV value sent from the PC
+void set_rgblight_uniform_from_pc_cmd(uint8_t *hsv_data){
+    /* 
+    * Data Format:
+    * Byte 0: Hue
+    * Byte 1: Saturation
+    * Byte 2: Value
+    * */
+    rgblight_sethsv_noeeprom(hsv_data[0], hsv_data[1], hsv_data[2]);
+}
+
+// https://github.com/qmk/qmk_firmware/blob/master/quantum/rgblight.h
+// Sets each LED to the corresponding HSV value sent from the PC
+void set_rgblight_from_pc_cmd(uint8_t *led_data, uint8_t length){
+    /* 
+    * Data Format:
+    * Byte n+0: LED Number
+    * Byte n+1: Hue
+    * Byte n+2: Saturation
+    * Byte n+3: Value
+    * */
+
+    // raw_hid_send_command(CMD_PC_RAW_DEBUG_MSG, led_data, length);
+
+    // if (!rgblight_is_enabled()) {
+    //     return;
+    // }
+
+   for (uint8_t i = 0; i < length; i+=4)
+   {
+       sethsv(led_data[i+1], led_data[i+2], led_data[i+3], (LED_TYPE *) &led[led_data[i]]);  // Hue, Sat, Val, LED Num
+   }
+   rgblight_set();
+
+    // uint8_t dbug_msg[32] = {0};
+    // uint8_t msg_cnt = 0;
+
+    // dbug_msg[msg_cnt++] = length;
+    // dbug_msg[msg_cnt++] = 42;
+
+    // // uint8_t tmp_counter = 0;
+    // for (uint8_t i = 0; i < length; i+=4)
+    // {
+    //     // tmp_counter++;
+    //     // sethsv(0, 255, 255, (LED_TYPE *) &led[i+0]);  // RED, LED Num
+    //     // uint8_t tmp[2] = {i+0, *led[i+0]};
+    //     // uint8_t tmp[1] = {i+0};
+    //     dbug_msg[msg_cnt++] = i;
+    //     dbug_msg[msg_cnt++] = 42;
+
+    //     // raw_hid_send_command(CMD_PC_RAW_DEBUG_MSG, tmp, sizeof(tmp));
+
+    // }
+}
+
 #endif
 
 // void raw_hid_send_response(void) {
@@ -263,11 +331,11 @@ void raw_hid_send_command(uint8_t command_id, uint8_t *data, uint8_t length) {
 * Byte 2-31: Command Data 
 *
 */
-  uint8_t send_data[32] = {0};  // data packet must be 32 bytes on 8bit AVR platform
-  send_data[0] = command_id;
-  send_data[1] = length;
-  memcpy(&send_data[2], data, length);
-  raw_hid_send(send_data, sizeof(send_data));
+    uint8_t send_data[32] = {0};  // data packet must be 32 bytes on 8bit AVR platform
+    send_data[0] = command_id;
+    send_data[1] = length;
+    memcpy(&send_data[2], data, length);
+    raw_hid_send(send_data, sizeof(send_data));
 }
 
 
@@ -280,34 +348,51 @@ void raw_hid_receive(uint8_t *data, uint8_t length) {
 *
 * NOTE: The first byte sent from the PC (Report ID) does not equal the first byte here. The Report ID is not included here.
 */
-  #ifdef CONSOLE_ENABLE
-//   uprintf("Data Recived: len: %u, Data: [%u, %u, %u, %u, %u, %u, %u, %u, ..., %u, %u]\n", length, data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[length-2], data[length-1]);
-  #endif
-  hid_connected = true; // PC connected
-//   hid_disconection_timer = timer_read();  // Reset the timeout timer
+    #ifdef CONSOLE_ENABLE
+    // uprintf("Data Recived: len: %u, Data: [%u, %u, %u, %u, %u, %u, %u, %u, ..., %u, %u]\n", length, data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[length-2], data[length-1]);
+    #endif
+    hid_connected = true; // PC connected
+    // hid_disconection_timer = timer_read();  // Reset the timeout timer
 
-  if (length >= 3) {
-    uint8_t *command_id     = &(data[0]);
-    // uint8_t *data_length = &(data[1]);
-    uint8_t *command_data   = &(data[2]);
+    if (length >= 3) {
+        uint8_t *command_id   = &(data[0]);
+        uint8_t *data_length  = &(data[1]);
+        uint8_t *command_data = &(data[2]);
 
-    switch(*command_id){
-      case CMD_DO_NOTHING:
-        break;
-      case CMD_KB_SET_CURRENT_FRONTER:
-        if(current_fronter != command_data[0]){
-            current_fronter = command_data[0];
-            #ifdef RGBLIGHT_ENABLE
-            set_rgblight_current_fronter();
-            #endif
+        switch(*command_id){
+            case CMD_DO_NOTHING:
+                break;
+
+            case CMD_KB_SET_CURRENT_FRONTER:
+                if(current_fronter != command_data[0]){
+                    current_fronter = command_data[0];
+                    #ifdef RGBLIGHT_ENABLE
+                    set_rgblight_current_fronter();
+                    #endif
+                }
+                break;
+
+            case CMD_KB_SET_ALL_RGB_LEDS:
+                if (*data_length == 3){  // Data Len must be 3 for this function.
+                    set_rgblight_uniform_from_pc_cmd(command_data);
+                }else{
+                    ; // TODO: Handle This error case
+                }
+                break;
+
+            case CMD_KB_SET_RGB_LEDS:
+                if(*data_length % 4 == 0){  // Data Len must be a multiple of 4 for this function.
+                    set_rgblight_from_pc_cmd(command_data, *data_length);
+                }else{
+                    ; // TODO: Handle This error case
+                }
+                break;
+
+            default:
+                // We either recived a not yet supported HID call or a malformed packet. Do nothing.
+                break;
         }
-        break;
-      default:
-        // #todo have seperate error var 
-        current_fronter = 255; // Set current fronter = 255 to indicate CMD parse error.
-        break;
     }
-  }
 }
 // ----------------
 
@@ -329,7 +414,8 @@ int cur_dance (qk_tap_dance_state_t *state){
 
     } else if(state->count == 3){
         //if tapped thrice, set to triple tap
-        return TRIPLE_TAP;
+        if (state->interrupted || !state->pressed) return TRIPLE_TAP;
+        else return TRIPLE_HOLD;
     } else {
         return 8;
     }
@@ -406,6 +492,12 @@ void tk_finished(qk_tap_dance_state_t *state, void *user_data){
             // writePinHigh(RX_LED);
             // writePinHigh(INDICATOR_LED);
             break;
+
+        case TRIPLE_HOLD:
+            rgblight_sethsv_noeeprom(HSV_RED);
+            wait_ms(100);
+            reset_keyboard(); 
+            break;
     }
 }
 
@@ -438,7 +530,7 @@ layer_state_t layer_state_set_user(layer_state_t state) {
             break;
         case _FUNCTION:
             backlight_level(_FUNCTION_LAYER_BRIGHTNESS);
-            rgblight_sethsv_noeeprom(HSV_BLUE);
+            rgblight_sethsv_noeeprom(HSV_MAGENTA);
             writePinHigh(TX_LED);
             writePinHigh(RX_LED);
             print("RGB: Blue\n");
@@ -453,7 +545,7 @@ layer_state_t layer_state_set_user(layer_state_t state) {
 
         case _RGB_LAYER:
             backlight_level(_BASE_BRIGHTNESS);
-            rgblight_sethsv_noeeprom(HSV_PINK);
+            rgblight_sethsv_noeeprom(HSV_WHITE);
             writePinLow(TX_LED);
             writePinLow(RX_LED);
             print("RGB: Pink\n");
