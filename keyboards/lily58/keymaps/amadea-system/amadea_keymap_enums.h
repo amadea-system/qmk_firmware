@@ -31,8 +31,10 @@ enum layer_number {
 
 enum custom_keycodes {
     VRSN = SAFE_RANGE,  // Prints out QMK Version Info
-    SW_HIBIKI,
-    SW_LUNA
+    SW_HIBIKI,          // Send Hibiki Switch CMD to PC
+    SW_LUNA,            // Send Luna  Switch CMD to PC
+    CK_SW_TEST,         // Cycle through fronters internally to test code
+    CK_TEST             // For random test stuff
 };
 
 
