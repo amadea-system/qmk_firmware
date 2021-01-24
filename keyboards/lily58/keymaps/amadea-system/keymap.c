@@ -25,20 +25,19 @@
   #include "keyboards/lily58/rev1/config.h"
 #endif
 
-#ifdef PROTOCOL_LUFA
-  #include "lufa.h"
-  #include "split_util.h"
-#endif
-#ifdef SSD1306OLED
-  #include "ssd1306.h"
-#endif
+// #ifdef PROTOCOL_LUFA
+//   #include "lufa.h"
+//   #include "split_util.h"
+// #endif
+// #ifdef SSD1306OLED
+//   #include "ssd1306.h"
+// #endif
 
 #include "amadea_keymap_enums.h"
 #include "version.h"  // For the Version Macro
 #include "raw_hid.h"
+#include "custom_transport/rgblight_user.h"
 
-
-// #include "leader.c" // Include leader key definitions
 
 
 extern uint8_t is_master;
@@ -223,9 +222,9 @@ XXXXXXX, XXXXXXX, XXXXXXX,  XXXXXXX,  XXXXXXX, XXXXXXX, _______, _______, XXXXXX
 
 /* ADJUST - Acessed by pressing 'Lower' & 'Raise' Keys
  * ,-----------------------------------------.                    ,-----------------------------------------.
- * |Versio|      |L-WASD|L-ESDF|      |      |                    |SW_Hib|SW_Lun|      |      |      |RESET |
+ * |Versio|      |L-WASD|L-ESDF|      |SWTest|                    |SW_Hib|SW_Lun|      |      |      |RESET |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
- * |      |      |      |      |      |      |                    |      |      |      |      |      |      |
+ * |      |      |      |      |      | Test |                    |      |      |      |      |      |      |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
  * |      |      |      |      |      |      |-------.    ,-------|      |      |RGB ON| HUE+ | SAT+ | VAL+ |
  * |------+------+------+------+------+------|       |    |       |------+------+------+------+------+------|
@@ -240,8 +239,8 @@ XXXXXXX, XXXXXXX, XXXXXXX,  XXXXXXX,  XXXXXXX, XXXXXXX, _______, _______, XXXXXX
 #define TOG_WASD TG(_GAME_WASD)
 
 [_ADJUST] = LAYOUT( \
-VRSN,    XXXXXXX, TOG_WASD, TOG_ESDF, XXXXXXX, XXXXXXX,                   SW_HIBIKI, SW_LUNA, XXXXXXX, XXXXXXX, XXXXXXX, RESET,   \
-XXXXXXX, XXXXXXX, XXXXXXX,  XXXXXXX,  XXXXXXX, XXXXXXX,                   XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, \
+VRSN,    XXXXXXX, TOG_WASD, TOG_ESDF, XXXXXXX, CK_SW_TEST,                   SW_HIBIKI, SW_LUNA, XXXXXXX, XXXXXXX, XXXXXXX, RESET,   \
+XXXXXXX, XXXXXXX, XXXXXXX,  XXXXXXX,  XXXXXXX, CK_TEST,                   XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, \
 XXXXXXX, XXXXXXX, XXXXXXX,  XXXXXXX,  XXXXXXX, XXXXXXX,                   XXXXXXX, XXXXXXX, RGB_TOG, RGB_HUI, RGB_SAI, RGB_VAI, \
 XXXXXXX, XXXXXXX, XXXXXXX,  XXXXXXX,  XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, RGB_MOD, RGB_HUD, RGB_SAD, RGB_VAD, \
                             _______,  _______, _______, _______, _______,  _______, _______, _______ \
@@ -318,8 +317,8 @@ void keyboard_post_init_user(void) {
 // -- HID Code --
 
 #ifdef RGBLIGHT_ENABLE
-void set_rgblight_current_fronter(void){
-    switch (current_fronter) {
+void set_rgblight_current_fronter(uint8_t fronter){
+    switch (fronter) {
         case MEM_SWITCHED_OUT:
             rgblight_sethsv_noeeprom(HSV_WHITE);
             break;
@@ -354,7 +353,7 @@ void set_rgblight_from_pc_cmd(uint8_t *led_data, uint8_t length){  // 128 Bytes.
     uint8_t i;
     for (i=0; i < length; i+=4)
     {
-        sethsv(led_data[i+1], led_data[i+2], led_data[i+3], (LED_TYPE *) &led[led_data[i]]);  // Hue, Sat, Val, LED Num
+        sethsv_split(led_data[i+1], led_data[i+2], led_data[i+3], (LED_TYPE *) &led[led_data[i]]);  // Hue, Sat, Val, LED Num
     }
     rgblight_set();
 
@@ -406,7 +405,7 @@ void raw_hid_receive(uint8_t *data, uint8_t length) {
                 if(current_fronter != command_data[0]){
                     current_fronter = command_data[0];
                     #ifdef RGBLIGHT_ENABLE
-                    set_rgblight_current_fronter();
+                    set_rgblight_current_fronter(current_fronter);
                     #endif
                 }
                 break;
@@ -590,6 +589,17 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             new_fronter = MEM_LUNA;
             raw_hid_send_command(CMD_PC_SWITCH_FRONTER, &new_fronter, 1);
             return false;
+        case CK_TEST:
+            SEND_STRING("TEST!");
+            return false;
+        case CK_SW_TEST:
+            
+            if(current_fronter == MEM_LUNA){
+                current_fronter = 0;
+            }else{
+                current_fronter += 1;
+            }
+            set_rgblight_current_fronter(current_fronter);
     }
   }
   return true;

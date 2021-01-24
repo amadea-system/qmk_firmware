@@ -46,10 +46,16 @@ GRAVE_ESC_ENABLE = no
 SPACE_CADET_ENABLE = no
 KEY_LOCK_ENABLE = no
 
-
 # Do not enable SLEEP_LED_ENABLE. it uses the same timer as BACKLIGHT_ENABLE
 SLEEP_LED_ENABLE = no       # Breathing sleep LED during USB suspend
 
+
+# Configure Custom Split Transport
+RGBLIGHT_CUSTOM_DRIVER = yes
+WS2812_DRIVER_REQUIRED = yes
+SPLIT_TRANSPORT = custom
+QUANTUM_LIB_SRC += serial.c
+SRC += custom_transport/cust_transport.c custom_transport/rgblight_user.c
 
 # Code for Leader Keys, Macros, Tap Dance, ETC
 SRC +=  leader.c \
