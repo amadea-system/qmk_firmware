@@ -1,7 +1,7 @@
 #include "rgblight_user.h"
 
 
-#if defined(RGBLIGHT_ENABLE) && defined(RGBLED_SPLIT) && defined(RGBLIGHT_CUSTOM_DRIVER)
+#if defined(RGBLIGHT_ENABLE) && defined(RGBLED_SPLIT) && defined(SPLIT_RGB_PIXEL_CONTROL)
 
 #include "ws2812.h"
 #include "string.h" // For memcpy
@@ -10,28 +10,35 @@
 extern rgblight_config_t rgblight_config; // Declared in rgblight.c
 extern rgblight_status_t rgblight_status; // Declared in rgblight.c
 
+bool RGB_pixel_change = false;
+
 #define RGBLIGHT_STATUS_CHANGE_PIXELS rgblight_status.change_flags |= RGBLIGHT_SPLIT_PIXEL_CHANGE
 
-void sethsv_raw_u(uint8_t hue, uint8_t sat, uint8_t val, LED_TYPE *led1) {
-    HSV hsv = {hue, sat, val};
+
+void sethsv_split(uint8_t hue, uint8_t sat, uint8_t val, LED_TYPE *led1) {
+    //  sethsv_raw_u(hue, sat, val > RGBLIGHT_LIMIT_VAL ? RGBLIGHT_LIMIT_VAL : val, led1); 
+
+    HSV hsv = {hue, sat, val > RGBLIGHT_LIMIT_VAL ? RGBLIGHT_LIMIT_VAL : val};
     RGB rgb = hsv_to_rgb(hsv);
-    setrgb_split(rgb.r, rgb.g, rgb.b, led1);
+    if(led1->r != rgb.r || led1->g != rgb.g || led1->b != rgb.b ){
+        // RGBLIGHT_STATUS_CHANGE_PIXELS;
+        RGB_pixel_change = true;
+    }
+
+    setrgb(rgb.r, rgb.g, rgb.b, led1); 
 }
 
-void sethsv_split(uint8_t hue, uint8_t sat, uint8_t val, LED_TYPE *led1) { sethsv_raw_u(hue, sat, val > RGBLIGHT_LIMIT_VAL ? RGBLIGHT_LIMIT_VAL : val, led1); }
+void rgblight_set_split(void) {
 
-void setrgb_split(uint8_t r, uint8_t g, uint8_t b, LED_TYPE *led1) {
-
-    if(led1->r != r || led1->g != g || led1->b != b ){
+    if (RGB_pixel_change)
+    {
+        RGB_pixel_change = false;
         RGBLIGHT_STATUS_CHANGE_PIXELS;
     }
-    led1->r = r;
-    led1->g = g;
-    led1->b = b;
-#ifdef RGBW
-    led1->w = 0;
-#endif
+    
+    rgblight_set();
 }
+
 
 void rgblight_get_led_pixels_syncinfo(LED_TYPE *sync_leds) {
     memcpy(sync_leds, &led, sizeof(led));
@@ -82,50 +89,50 @@ void rgblight_update_sync_pixels(rgblight_syncinfo_t *syncinfo, LED_TYPE *sync_l
 #    endif     /* RGBLIGHT_USE_TIMER */
 }
 
-void rgblight_call_driver(LED_TYPE *start_led, uint8_t num_leds) { ws2812_setleds(start_led, num_leds); }
+// void rgblight_call_driver(LED_TYPE *start_led, uint8_t num_leds) { ws2812_setleds(start_led, num_leds); }
 
-void rgblight_set(void) {
-    LED_TYPE *start_led;
-    uint8_t   num_leds = rgblight_ranges.clipping_num_leds;
+// void rgblight_set(void) {
+//     LED_TYPE *start_led;
+//     uint8_t   num_leds = rgblight_ranges.clipping_num_leds;
 
-    if (!rgblight_config.enable) {
-        for (uint8_t i = rgblight_ranges.effect_start_pos; i < rgblight_ranges.effect_end_pos; i++) {
-            led[i].r = 0;
-            led[i].g = 0;
-            led[i].b = 0;
-#    ifdef RGBW
-            led[i].w = 0;
-#    endif
-        }
-    }
+//     if (!rgblight_config.enable) {
+//         for (uint8_t i = rgblight_ranges.effect_start_pos; i < rgblight_ranges.effect_end_pos; i++) {
+//             led[i].r = 0;
+//             led[i].g = 0;
+//             led[i].b = 0;
+// #    ifdef RGBW
+//             led[i].w = 0;
+// #    endif
+//         }
+//     }
 
-#    ifdef RGBLIGHT_LAYERS
-    if (rgblight_layers != NULL
-#        if !defined(RGBLIGHT_LAYERS_OVERRIDE_RGB_OFF)
-        && rgblight_config.enable
-#        elif defined(RGBLIGHT_SLEEP)
-        && !is_suspended
-#        endif
-    ) {
-        rgblight_layers_write();
-    }
-#    endif
+// #    ifdef RGBLIGHT_LAYERS
+//     if (rgblight_layers != NULL
+// #        if !defined(RGBLIGHT_LAYERS_OVERRIDE_RGB_OFF)
+//         && rgblight_config.enable
+// #        elif defined(RGBLIGHT_SLEEP)
+//         && !is_suspended
+// #        endif
+//     ) {
+//         rgblight_layers_write();
+//     }
+// #    endif
 
-#    ifdef RGBLIGHT_LED_MAP
-    LED_TYPE led0[RGBLED_NUM];
-    for (uint8_t i = 0; i < RGBLED_NUM; i++) {
-        led0[i] = led[pgm_read_byte(&led_map[i])];
-    }
-    start_led = led0 + rgblight_ranges.clipping_start_pos;
-#    else
-    start_led = led + rgblight_ranges.clipping_start_pos;
-#    endif
+// #    ifdef RGBLIGHT_LED_MAP
+//     LED_TYPE led0[RGBLED_NUM];
+//     for (uint8_t i = 0; i < RGBLED_NUM; i++) {
+//         led0[i] = led[pgm_read_byte(&led_map[i])];
+//     }
+//     start_led = led0 + rgblight_ranges.clipping_start_pos;
+// #    else
+//     start_led = led + rgblight_ranges.clipping_start_pos;
+// #    endif
 
-#    ifdef RGBW
-    for (uint8_t i = 0; i < num_leds; i++) {
-        convert_rgb_to_rgbw(&start_led[i]);
-    }
-#    endif
-    rgblight_call_driver(start_led, num_leds);
-}
+// #    ifdef RGBW
+//     for (uint8_t i = 0; i < num_leds; i++) {
+//         convert_rgb_to_rgbw(&start_led[i]);
+//     }
+// #    endif
+//     rgblight_call_driver(start_led, num_leds);
+// }
 #endif

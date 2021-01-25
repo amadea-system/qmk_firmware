@@ -47,11 +47,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // -- Underglow Config --
 
-
-
+#define SPLIT_RGB_PIXEL_CONTROL
 #undef RGBLED_NUM
 #define RGBLED_NUM 12
 #define RGBLED_SPLIT { 6, 6 }
+#define RGBLIGHT_LED_MAP { 5, 4, 3, 2, 1, 0, 6, 7, 8, 9, 10}
 
 #define RGBLIGHT_SPLIT 
 #undef RGBLIGHT_ANIMATIONS

@@ -23,8 +23,7 @@ static pin_t encoders_pad[] = ENCODERS_PAD_A;
 #    define NUMBER_OF_ENCODERS (sizeof(encoders_pad) / sizeof(pin_t))
 #endif
 
-#if defined(RGBLIGHT_ENABLE) && defined(RGBLED_SPLIT) && defined(RGBLIGHT_CUSTOM_DRIVER)
-#define SPLIT_RGB_PIXEL_CONTROL
+#if defined(RGBLIGHT_ENABLE) && defined(RGBLED_SPLIT) && defined(SPLIT_RGB_PIXEL_CONTROL)
 #include "rgblight_user.h"
 #endif
 

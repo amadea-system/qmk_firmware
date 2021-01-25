@@ -355,7 +355,8 @@ void set_rgblight_from_pc_cmd(uint8_t *led_data, uint8_t length){  // 128 Bytes.
     {
         sethsv_split(led_data[i+1], led_data[i+2], led_data[i+3], (LED_TYPE *) &led[led_data[i]]);  // Hue, Sat, Val, LED Num
     }
-    rgblight_set();
+    // rgblight_set();
+    rgblight_set_split();
 
 }
 #endif
