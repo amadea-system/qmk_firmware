@@ -51,7 +51,7 @@ SLEEP_LED_ENABLE = no       # Breathing sleep LED during USB suspend
 
 
 # Configure Custom Split Transport
-RGBLIGHT_CUSTOM_DRIVER = yes
+# RGBLIGHT_CUSTOM_DRIVER = yes
 WS2812_DRIVER_REQUIRED = yes
 SPLIT_TRANSPORT = custom
 QUANTUM_LIB_SRC += serial.c
