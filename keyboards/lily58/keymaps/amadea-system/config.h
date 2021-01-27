@@ -42,6 +42,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // #define USE_SERIAL_PD2
 
+// Saves a bunch of space (>1kb) but limits to 8/16 layers
+// #define LAYER_STATE_8BIT
+#define LAYER_STATE_16BIT
+
 #define TAPPING_FORCE_HOLD  // This will prevent ONESHOT_TAP_TOGGLE from functioning.
 #define TAPPING_TERM 200//100
 
