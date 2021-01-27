@@ -71,8 +71,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 // -- Tap-Hold Config --
+// https://docs.qmk.fm/#/tap_hold
+#define TAPPING_TERM 200    // How long till a keypress is considered a 'hold'  //100 
 #define TAPPING_FORCE_HOLD  // This will prevent ONESHOT_TAP_TOGGLE from functioning.
-#define TAPPING_TERM 200 //100
+
 
 
 // -- Leader Keys Config --
