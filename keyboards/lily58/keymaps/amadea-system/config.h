@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+// -- USB Ident Config -- 
 #undef MANUFACTURER
 #define MANUFACTURER Amadea
 
@@ -32,24 +33,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // #undef DEVICE_VER
 // #define DEVICE_VER      0x0100
 
-//#define USE_MATRIX_I2C
+
+// -- General Config --
 
 /* Select hand configuration */
-
 #define MASTER_LEFT
 // #define MASTER_RIGHT
 // #define EE_HANDS
 
-// #define USE_SERIAL_PD2
+// #define USE_SERIAL_PD2  // I don't think this does anything...
 
+// -- Compile Space Savings Config --
 // Saves a bunch of space (>1kb) but limits to 8/16 layers
 // #define LAYER_STATE_8BIT
 #define LAYER_STATE_16BIT
 
-#define TAPPING_FORCE_HOLD  // This will prevent ONESHOT_TAP_TOGGLE from functioning.
-#define TAPPING_TERM 200//100
 
-// -- Underglow Config --
+// -- RGB Underglow Config --
 
 #define SPLIT_RGB_PIXEL_CONTROL
 #undef RGBLED_NUM
@@ -65,10 +65,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define RGBLIGHT_VAL_STEP 17
 
 
-
-// Make sure NKRO is turned on
-#undef FORCE_NKRO
+// -- NKRO Config --
+#undef FORCE_NKRO  // Had to undef, then redefine to actually get it to activate.
 #define FORCE_NKRO
+
+
+// -- Tap-Hold Config --
+#define TAPPING_FORCE_HOLD  // This will prevent ONESHOT_TAP_TOGGLE from functioning.
+#define TAPPING_TERM 200 //100
+
 
 // -- Leader Keys Config --
 #define LEADER_PER_KEY_TIMING
