@@ -23,7 +23,8 @@
 
 
 // Default Backlight Color
-#define DEFAULT_ARGB_COLOR HSV_PURPLE
+#define DEFAULT_ARGB_COLOR HSV_SPRINGGREEN  //HSV_PURPLE
+#define MEM_SWITCH_OUT_COLOR HSV_BLUE
 
 //create the tap type
 typedef struct {
@@ -51,8 +52,15 @@ typedef struct {
 // fav_colors[MEM_HIBIKI] = fav_color { 191, 255 };   // Hibiki. PURPLE
 // fav_colors[MEM_LUNA] = fav_color { 170, 255 };   // Luna. BLUE
 
-uint8_t fronter_led_range_start = 4;
-uint8_t fronter_led_range_end = 5;
+typedef struct {
+    uint8_t start;
+    uint8_t end;
+}fronter_led_range_t;
+
+
+fronter_led_range_t fronter_led_range = {1, 8};
+HSV fronter_hsv_value;
+
 
 // HID Vars
 bool hid_connected = false; // Flag indicating if we have a PC connection yet
@@ -60,8 +68,15 @@ uint8_t current_fronter = MEM_SWITCHED_OUT;
 // static uint16_t hid_disconection_timer;
 
 // --- Function Defs ---
+// - HID Funcs - 
 // void send_hid_debug(uint8_t *data);
 void raw_hid_send_command(uint8_t command_id, uint8_t *data, uint8_t length);
+
+// - RGB LED Funcs - 
+// void set_hsv_fronter_leds(void);
+void set_hsv_fronter_value(uint8_t hue, uint8_t sat, uint8_t val);
+// void set_hsv_fronter_leds(uint8_t hue, uint8_t sat, uint8_t val);
+void set_hsv_leds(uint8_t hue, uint8_t sat, uint8_t val, bool indicator_leds);
 
 //function to handle all the tap dances
 int cur_dance(qk_tap_dance_state_t *state);
@@ -162,7 +177,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     * ,--------------------.
     * |______| Hue+ |Brght+|
     * |------+------+------|
-    * | Hue  | Hue- |Brght-|
+    * | Togg | Hue- |Brght-|
     * \--------------------/
     *        '------'
     *        | SAT+ |
@@ -206,9 +221,52 @@ void keyboard_post_init_user(void) {
     #ifdef RGBLIGHT_ENABLE
         // rgblight_setrgb_range(0.5, 0.5, 0.5, 0, 5);
         rgblight_enable_noeeprom(); // Enables RGB, without saving settings
-        rgblight_sethsv_noeeprom(DEFAULT_ARGB_COLOR);
+        // rgblight_sethsv_noeeprom(DEFAULT_ARGB_COLOR);
         rgblight_mode_noeeprom(RGBLIGHT_MODE_STATIC_LIGHT);
+
+        // HSV tmp_hsv = {HSV_PURPLE};
+        // fronter_hsv_value = tmp_hsv; 
+        set_hsv_fronter_value(MEM_SWITCH_OUT_COLOR);
+        set_hsv_leds(DEFAULT_ARGB_COLOR, true);
+        
     #endif
+}
+
+
+// - RGB LED Funcs - 
+
+void set_hsv_fronter_value(uint8_t hue, uint8_t sat, uint8_t val){
+        HSV tmp_hsv = {hue, sat, val};
+        fronter_hsv_value = tmp_hsv; 
+} 
+
+// void set_hsv_fronter_leds(void){
+
+//     rgblight_sethsv_range(fronter_hsv_value.h, fronter_hsv_value.s, fronter_hsv_value.v, fronter_led_range.start, fronter_led_range.end+1);  // Start is inclusive, End is Exclusive
+
+// }
+
+
+void set_hsv_leds(uint8_t hue, uint8_t sat, uint8_t val, bool indicator_leds){
+
+    // if (!indicator_leds)
+    // {
+    //     HSV tmp_hsv = {hue, sat, val};
+    //     fronter_hsv_value = tmp_hsv; 
+    // }
+    
+
+    for (uint8_t i = 0; i < RGBLED_NUM; i++) {
+        if (i < fronter_led_range.start || i > fronter_led_range.end)
+        {
+            if(indicator_leds){
+                sethsv(hue, sat, val, &led[i]);
+            }
+        }else{
+            sethsv(fronter_hsv_value.h, fronter_hsv_value.s, fronter_hsv_value.v, &led[i]);
+        }
+    }
+    rgblight_set();
 }
 
 
@@ -223,21 +281,25 @@ void keyboard_post_init_user(void) {
 void set_rgblight_current_fronter(void){
     switch (current_fronter) {
         case MEM_SWITCHED_OUT:
-            rgblight_sethsv_noeeprom(HSV_WHITE);
+            // rgblight_sethsv_noeeprom(HSV_WHITE);
+            // set_hsv_fronter_value(HSV_WHITE);
+            set_hsv_fronter_value(MEM_SWITCH_OUT_COLOR);
             break;
         case MEM_FLUTTERSHY:
-            rgblight_sethsv_noeeprom(HSV_YELLOW);
+            set_hsv_fronter_value(HSV_YELLOW);
             break;
         case MEM_HIBIKI:
-            rgblight_sethsv_noeeprom(HSV_PURPLE);
+            set_hsv_fronter_value(HSV_PURPLE);
             break;
         case MEM_LUNA:
-            rgblight_sethsv_noeeprom(HSV_BLUE);
+            set_hsv_fronter_value(HSV_BLUE);
             break;
         case 255:
-            rgblight_sethsv_noeeprom(HSV_RED);
+            set_hsv_fronter_value(HSV_RED);
             break;
     }
+    // set_hsv_fronter_leds();
+    set_hsv_leds(0, 0, 0, false);
 }
 
 // void set_rgblight_current_fronter(void){
@@ -494,7 +556,7 @@ void tk_finished(qk_tap_dance_state_t *state, void *user_data){
             break;
 
         case TRIPLE_HOLD:
-            rgblight_sethsv_noeeprom(HSV_RED);
+            rgblight_sethsv_noeeprom(HSV_RED);  // Set all to red to indicate RESET!
             wait_ms(100);
             reset_keyboard(); 
             break;
@@ -523,21 +585,26 @@ layer_state_t layer_state_set_user(layer_state_t state) {
     switch (get_highest_layer(state)) {
         case _BASE:
             backlight_level(_BASE_BRIGHTNESS);
-            set_rgblight_current_fronter(); // Purple
+            // set_rgblight_current_fronter(); // Purple
+            // set_hsv_fronter_leds();
+            set_hsv_leds(0, 0, 0, false);
+            set_hsv_leds(DEFAULT_ARGB_COLOR, true);
             writePinHigh(TX_LED);
             writePinHigh(RX_LED);
             print("RGB: Purple\n");
             break;
         case _FUNCTION:
             backlight_level(_FUNCTION_LAYER_BRIGHTNESS);
-            rgblight_sethsv_noeeprom(HSV_MAGENTA);
+            // rgblight_sethsv_noeeprom(HSV_MAGENTA);
+            set_hsv_leds(HSV_MAGENTA, true);
             writePinHigh(TX_LED);
             writePinHigh(RX_LED);
             print("RGB: Blue\n");
             break;
         case _MEDIA:
             backlight_level(_MEDIA_LAYER_BRIGHTNESS);
-            rgblight_sethsv_noeeprom(HSV_YELLOW);
+            // rgblight_sethsv_noeeprom(HSV_YELLOW);
+            set_hsv_leds(HSV_YELLOW, true);
             writePinHigh(TX_LED);
             writePinHigh(RX_LED);
             print("RGB: Yellow\n");
@@ -545,7 +612,8 @@ layer_state_t layer_state_set_user(layer_state_t state) {
 
         case _RGB_LAYER:
             backlight_level(_BASE_BRIGHTNESS);
-            rgblight_sethsv_noeeprom(HSV_WHITE);
+            // rgblight_sethsv_noeeprom(HSV_WHITE);
+            set_hsv_leds(HSV_WHITE, true);
             writePinLow(TX_LED);
             writePinLow(RX_LED);
             print("RGB: Pink\n");
@@ -553,7 +621,8 @@ layer_state_t layer_state_set_user(layer_state_t state) {
   
         default:
             backlight_level(_BASE_BRIGHTNESS);
-            rgblight_sethsv_noeeprom(DEFAULT_ARGB_COLOR);
+            // rgblight_sethsv_noeeprom(DEFAULT_ARGB_COLOR);
+            set_hsv_leds(DEFAULT_ARGB_COLOR, true);
             print("RGB: Purple (default)\n");
             break;
     }
