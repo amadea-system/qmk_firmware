@@ -158,6 +158,7 @@ void right_bracket_reset(qk_tap_dance_state_t *state, void *user_data) {
 qk_tap_dance_action_t tap_dance_actions[] = {
     [TD_LBRK] = ACTION_TAP_DANCE_FN_ADVANCED_TIME(NULL, left_bracket_finished, left_bracket_reset, 200),
     [TD_RBRK] = ACTION_TAP_DANCE_FN_ADVANCED_TIME(NULL, right_bracket_finished, right_bracket_reset, 200),
-    [TD_MINUS_EQL]  = ACTION_TAP_DANCE_DOUBLE(KC_MINS, KC_EQL),
+
+    [TD_MINUS_EQL]  = ACTION_TAP_DANCE_DOUBLE(KC_MINS, KC_EQL),  // Send '-' (Minus Key) on a Tap, '=' (Equal Key) on a Double Tap, 
 
 };
