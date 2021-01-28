@@ -15,6 +15,14 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ * 
+ *  --- Notes ---
+ * How to disable the "Office" key from blocking the Hyper Key
+ * https://superuser.com/questions/1457073/how-do-i-disable-specific-windows-10-office-keyboard-shortcut-ctrlshiftwinal
+ * https://www.howtogeek.com/445318/how-to-remap-the-office-key-on-your-keyboard/
+ * 
+ * 
  */
 
 
@@ -104,14 +112,15 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 ),
 */
 #define OSM_LSFT OSM(MOD_LSFT)
-#define TD_MINS  TD_MINUS_EQL
+#define TD_MINS  TD_MINUS_EQL      // Send '-' (Minus Key) on a Tap, '=' (Equal Key) on a Double Tap, 
+// #define MT_LEAD  HYPR_T(KC_LEAD)   // Left Control, Shift, Alt and GUI when held, 'Leader Key' when tapped 
 
  [_QWERTY] = LAYOUT( \
   KC_ESC,   KC_1,   KC_2,    KC_3,    KC_4,    KC_5,                        KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    KC_GRV, \
   KC_TAB,   KC_Q,   KC_W,    KC_E,    KC_R,    KC_T,                        KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,    TD(TD_MINS), \
   OSM_LSFT, KC_A,   KC_S,    KC_D,    KC_F,    KC_G,                        KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_QUOT, \
-  KC_LCTRL, KC_Z,   KC_X,    KC_C,    KC_V,    KC_B,  KC_LEAD,    KC_RBRC,  KC_N,    KC_M,    KC_COMMA, KC_DOT, KC_SLSH, KC_RSFT, \
-                        KC_LALT, OSM_LSFT, MO(_LOWER), KC_SPC,    KC_ENT, MO(_RAISE), KC_BSPC, KC_RGUI \
+  KC_LCTRL, KC_Z,   KC_X,    KC_C,    KC_V,    KC_B,  KC_LEAD,    KC_HYPR,  KC_N,    KC_M,    KC_COMMA, KC_DOT, KC_SLSH, KC_RSFT, \
+                        KC_LALT, KC_LGUI, MO(_LOWER), KC_SPC,    KC_ENT, MO(_RAISE), KC_BSPC, KC_RGUI \
 ),
 
 /* LOWER - Acessed by pressing 'Lower' Key
@@ -573,35 +582,50 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     #endif
     // set_timelog();
 
-  if (record->event.pressed) {
-    switch (keycode) {
-
-      // -- Macros --
-        uint8_t new_fronter;
-
-        case VRSN:  // Prints out QMK Version Info
-            SEND_STRING(QMK_KEYBOARD "/" QMK_KEYMAP " @ " QMK_VERSION "\nCompiled On " QMK_BUILDDATE "\n");
-            return false;
-        case SW_HIBIKI:
-            new_fronter = MEM_HIBIKI;
-            raw_hid_send_command(CMD_PC_SWITCH_FRONTER, &new_fronter, 1);
-            return false;
-        case SW_LUNA:
-            new_fronter = MEM_LUNA;
-            raw_hid_send_command(CMD_PC_SWITCH_FRONTER, &new_fronter, 1);
-            return false;
-        case CK_TEST:
-            SEND_STRING("TEST!");
-            return false;
-        case CK_SW_TEST:
-            
-            if(current_fronter == MEM_LUNA){
-                current_fronter = 0;
-            }else{
-                current_fronter += 1;
-            }
-            set_rgblight_current_fronter(current_fronter);
+    // - Press Down Only Macros -
+    if (record->event.pressed) {
+        switch (keycode) {
+            // -- Macros --
+            uint8_t new_fronter;
+            case VRSN:  // Prints out QMK Version Info
+                SEND_STRING(QMK_KEYBOARD "/" QMK_KEYMAP " @ " QMK_VERSION "\nCompiled On " QMK_BUILDDATE "\n");
+                // return false;
+                break;
+            case SW_HIBIKI:
+                new_fronter = MEM_HIBIKI;
+                raw_hid_send_command(CMD_PC_SWITCH_FRONTER, &new_fronter, 1);
+                // return false;
+                break;
+            case SW_LUNA:
+                new_fronter = MEM_LUNA;
+                raw_hid_send_command(CMD_PC_SWITCH_FRONTER, &new_fronter, 1);
+                // return false;
+                break;
+            case CK_TEST:
+                SEND_STRING("TEST!");
+                // return false;
+                break;
+            case CK_SW_TEST:
+                if(current_fronter == MEM_LUNA){
+                    current_fronter = 0;
+                }else{
+                    current_fronter += 1;
+                }
+                set_rgblight_current_fronter(current_fronter);
+                break;
+        }
     }
-  }
-  return true;
+
+    // // - Macros With Press Down and Press up Actions-
+    // switch (keycode) {
+    //     case KC_:
+    //         if (record->event.pressed){
+                
+    //         }else{
+
+    //         }
+    // }
+
+
+    return true;
 }
