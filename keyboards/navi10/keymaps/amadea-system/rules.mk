@@ -19,4 +19,6 @@ RGBLIGHT_ENABLE = yes  		# Enable WS2812 RGB underlight.
 RAW_ENABLE = yes            # 204 Bytes
 CONSOLE_ENABLE = no
 
+OLED_DRIVER_ENABLE = yes    # OLED display
+
 EXTRAFLAGS += -flto         # https://thomasbaart.nl/2018/12/01/reducing-firmware-size-in-qmk/

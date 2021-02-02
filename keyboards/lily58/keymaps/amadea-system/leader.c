@@ -50,9 +50,11 @@ void matrix_scan_user(void) {
          * A-S-T
          * 
          */
- 
+        
         // -- Unicode Characters -- //
+        #ifdef UNICODEMAP_ENABLE
         SEQ_ONE_KEY(KC_Q) { send_unicode_string("‽");}  //Sens the Introbang (‽) Characters
+        #endif
 
         // -- Proxy Tags -- //
         SEQ_ONE_KEY(KC_R) { SEND_STRING("Luna\\ "); }           //Luna

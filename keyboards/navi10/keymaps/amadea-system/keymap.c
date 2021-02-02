@@ -1,5 +1,7 @@
 /* Copyright 2019 Ethan Durrant (emdarcher)
  *
+ * Copyright 2020 Amadea System
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 2 of the License, or
@@ -12,21 +14,47 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ * 
+ * 
+ *  --- Notes ---
+ * 
+ * Pro Micro Min Maps
+ * https://www.reddit.com/r/olkb/comments/5s8q76/help_pro_micro_pinout_for_qmk/
+ * https://cdn.sparkfun.com/assets/9/c/3/c/4/523a1765757b7f5c6e8b4567.png
+ * 
  */
+
+
 #include QMK_KEYBOARD_H
 #include "print.h"
 #include "raw_hid.h"
 
 #include "string.h" // For memcpy
+#include "stdio.h"
 
 #include "navi10_keymap_enums.h"
 
 
-// Default Backlight Color
-#define DEFAULT_ARGB_COLOR HSV_SPRINGGREEN  //HSV_PURPLE
-#define MEM_SWITCH_OUT_COLOR HSV_BLUE
+/* ------------ # Defines ------------ */
 
-//create the tap type
+#define DEFAULT_ARGB_COLOR HSV_SPRINGGREEN  // Default Backlight Color, Used for the Base Layer
+#define MEM_SWITCH_OUT_COLOR HSV_BLUE       // The Backlight color to indicate "No one in front". Defined here becuase it is used in several places.
+
+// - Pin Defs -
+#define TX_LED   D5
+#define RX_LED   B0
+// #define INDICATOR_LED   B5
+
+// - HID -
+#define HID_DISCONECTION_TIMEOUT 5000  // milliseconds 
+
+// - OLED -
+// #define OLED_BRIGHTNESS 255
+
+
+/* ----- Local Enums & Type Defs ----- */
+
 typedef struct {
     bool is_press_action;
     int state;
@@ -55,22 +83,35 @@ typedef struct {
 typedef struct {
     uint8_t start;
     uint8_t end;
-}fronter_led_range_t;
+}secondary_led_range_t;
 
 
-fronter_led_range_t fronter_led_range = {1, 8};
+/* --------- Local Variables --------- */
+
+// - RGB LED Variables - 
+#define SECONDARY_LEDS_INDICATION
+// #define SECONDARY_LEDS_FRONTER
+secondary_led_range_t secondary_led_range = {4, 5};
 HSV fronter_hsv_value;
 
 
-// HID Vars
+// - HID Variables - 
 bool hid_connected = false; // Flag indicating if we have a PC connection yet
 uint8_t current_fronter = MEM_SWITCHED_OUT;
-// static uint16_t hid_disconection_timer;
+static uint16_t hid_disconection_timer = 0;
+static uint16_t activity_ping_timer = 0;
 
-// --- Function Defs ---
+
+// - OLED Variables - 
+static uint32_t oled_user_timeout = 0;
+
+
+/* ----------- Function Defs --------- */
+
 // - HID Funcs - 
-// void send_hid_debug(uint8_t *data);
+void send_hid_debug(uint8_t *data);
 void raw_hid_send_command(uint8_t command_id, uint8_t *data, uint8_t length);
+bool check_hid_timeout(void);
 
 // - RGB LED Funcs - 
 // void set_hsv_fronter_leds(void);
@@ -78,6 +119,7 @@ void set_hsv_fronter_value(uint8_t hue, uint8_t sat, uint8_t val);
 // void set_hsv_fronter_leds(uint8_t hue, uint8_t sat, uint8_t val);
 void set_hsv_leds(uint8_t hue, uint8_t sat, uint8_t val, bool indicator_leds);
 
+// - Tap Dance Funcs - 
 //function to handle all the tap dances
 int cur_dance(qk_tap_dance_state_t *state);
 
@@ -86,29 +128,7 @@ void tk_finished(qk_tap_dance_state_t *state, void *user_data);
 void tk_reset(qk_tap_dance_state_t *state, void *user_data);
 
 
-// https://www.reddit.com/r/olkb/comments/5s8q76/help_pro_micro_pinout_for_qmk/
-// https://cdn.sparkfun.com/assets/9/c/3/c/4/523a1765757b7f5c6e8b4567.png
-// #define INDICATOR_LED   B5
-
-#define TX_LED   D5
-#define RX_LED   B0
-
-// Status LED Brightness
-enum status_led_brightness_enum {
-    _BASE_BRIGHTNESS = 1,
-    _FUNCTION_LAYER_BRIGHTNESS = 8,
-    _MEDIA_LAYER_BRIGHTNESS = 16,
-};
-
-
-// Layer Definitions
-enum layer_number {
-    _BASE = 0,
-    _FUNCTION,
-    _MEDIA,
-    _RGB_LAYER
-};
-
+/* -------- KeyMap Definition -------- */
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
@@ -195,6 +215,10 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 };
 
 
+/* ------------ Functions ------------ */
+
+/* - Keyboard Initilization - */
+
 void matrix_init_user(void) {
     //init the Pro Micro on-board LEDs
     setPinOutput(TX_LED);
@@ -207,7 +231,7 @@ void matrix_init_user(void) {
 //turn on status led 
 void keyboard_post_init_user(void) {
 
-    debug_enable=true;
+    debug_enable=false;
     // debug_matrix=true;
 
     // Call the post init code.
@@ -231,14 +255,17 @@ void keyboard_post_init_user(void) {
         
     #endif
 }
+// -----------
 
 
-// - RGB LED Funcs - 
+/* - RGB LED Functions - */
 
+#ifdef RGBLIGHT_ENABLE
 void set_hsv_fronter_value(uint8_t hue, uint8_t sat, uint8_t val){
         HSV tmp_hsv = {hue, sat, val};
         fronter_hsv_value = tmp_hsv; 
 } 
+
 
 // void set_hsv_fronter_leds(void){
 
@@ -247,6 +274,12 @@ void set_hsv_fronter_value(uint8_t hue, uint8_t sat, uint8_t val){
 // }
 
 
+/*  void set_hsv_leds(uint8_t hue, uint8_t sat, uint8_t val, bool indicator_leds)
+ * 
+ *  indicator_leds: If True, Set the LEDs used for indication (Layer, Caps lock, Etc...) to the provided HSV values
+ *                  If False, Only update the fronter LEDs.
+ * 
+ */
 void set_hsv_leds(uint8_t hue, uint8_t sat, uint8_t val, bool indicator_leds){
 
     // if (!indicator_leds)
@@ -254,10 +287,13 @@ void set_hsv_leds(uint8_t hue, uint8_t sat, uint8_t val, bool indicator_leds){
     //     HSV tmp_hsv = {hue, sat, val};
     //     fronter_hsv_value = tmp_hsv; 
     // }
-    
 
+ 
+    #ifdef SECONDARY_LEDS_FRONTER
+    
+    /* Set Config LED Range to Fronter Values, Non-Config range to passed HSV Values */
     for (uint8_t i = 0; i < RGBLED_NUM; i++) {
-        if (i < fronter_led_range.start || i > fronter_led_range.end)
+        if (i < secondary_led_range.start || i > secondary_led_range.end)
         {
             if(indicator_leds){
                 sethsv(hue, sat, val, &led[i]);
@@ -266,18 +302,24 @@ void set_hsv_leds(uint8_t hue, uint8_t sat, uint8_t val, bool indicator_leds){
             sethsv(fronter_hsv_value.h, fronter_hsv_value.s, fronter_hsv_value.v, &led[i]);
         }
     }
+
+    #else // SECONDARY_LEDS_INDICATION
+    /* Set Config LED Range to passed HSV Values, Non-Config range to Fronter Values */
+    for (uint8_t i = 0; i < RGBLED_NUM; i++) {
+        if (i < secondary_led_range.start || i > secondary_led_range.end)
+        {
+            sethsv(fronter_hsv_value.h, fronter_hsv_value.s, fronter_hsv_value.v, &led[i]);
+        }else{
+            if(indicator_leds){
+                sethsv(hue, sat, val, &led[i]);
+            }
+        }
+    }
+    #endif
+    
     rgblight_set();
 }
 
-
-// -- HID Code --
-
-// void send_hid_debug(uint8_t *data){
-//     raw_hid_send_command(CMD_PC_RAW_DEBUG_MSG, *data, sizeof(data))
-
-// }
-
-#ifdef RGBLIGHT_ENABLE
 void set_rgblight_current_fronter(void){
     switch (current_fronter) {
         case MEM_SWITCHED_OUT:
@@ -311,6 +353,15 @@ void set_rgblight_current_fronter(void){
 //     }
 // }
 
+#endif  // -RGBLIGHT_ENABLE
+
+// -----------
+
+
+/* - HID Functions - */
+
+// These RGB LED Functions are in the HID section since they are HID Based functions.
+#ifdef RGBLIGHT_ENABLE
 // Sets all LEDs to the single HSV value sent from the PC
 void set_rgblight_uniform_from_pc_cmd(uint8_t *hsv_data){
     /* 
@@ -365,8 +416,7 @@ void set_rgblight_from_pc_cmd(uint8_t *led_data, uint8_t length){
 
     // }
 }
-
-#endif
+#endif  // -RGBLIGHT_ENABLE
 
 // void raw_hid_send_response(void) {
 //   // Send the current info screen index to the connected node script so that it can pass back the new data
@@ -383,6 +433,35 @@ void set_rgblight_from_pc_cmd(uint8_t *led_data, uint8_t length){
 //   send_data[send_index++] = 251; // indicate end of response back.
 //   raw_hid_send(send_data, sizeof(send_data));
 // }
+
+// All hid Timer code clocks in at approx 47 bytes
+bool check_hid_timeout(void){
+
+    if (!hid_connected || timer_elapsed(hid_disconection_timer) >= HID_DISCONECTION_TIMEOUT) {
+        hid_connected = false;
+        return false;
+    }
+    return true;
+}
+
+
+void send_hid_debug(uint8_t *data){
+    raw_hid_send_command(CMD_PC_RAW_DEBUG_MSG, data, sizeof(data));
+}
+
+
+void hid_send_activity_ping(void){
+
+    if (!hid_connected || timer_elapsed(activity_ping_timer) < 5000) {
+        // Only send a ping once every 5 seconds and only if we are connected.
+        return;
+    }
+
+    activity_ping_timer = timer_read();  // Reset the activity ping timer
+    uint8_t send_data[32] = {0};  // data packet must be 32 bytes on 8bit AVR platform
+    send_data[0] = CMD_PC_ACTIVITY_PING;
+    raw_hid_send(send_data, sizeof(send_data));
+}
 
 
 void raw_hid_send_command(uint8_t command_id, uint8_t *data, uint8_t length) {
@@ -414,7 +493,7 @@ void raw_hid_receive(uint8_t *data, uint8_t length) {
     // uprintf("Data Recived: len: %u, Data: [%u, %u, %u, %u, %u, %u, %u, %u, ..., %u, %u]\n", length, data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[length-2], data[length-1]);
     #endif
     hid_connected = true; // PC connected
-    // hid_disconection_timer = timer_read();  // Reset the timeout timer
+    hid_disconection_timer = timer_read();  // Reset the timeout timer
 
     if (length >= 3) {
         uint8_t *command_id   = &(data[0]);
@@ -450,14 +529,23 @@ void raw_hid_receive(uint8_t *data, uint8_t length) {
                 }
                 break;
 
+            case CMD_KB_ACTIVITY_PING:
+                #if OLED_USER_TIMEOUT > 0
+                oled_user_timeout = timer_read32(); // feed the oled timer
+                #endif
+                break;
+
+
             default:
                 // We either recived a not yet supported HID call or a malformed packet. Do nothing.
                 break;
         }
     }
 }
+
 // ----------------
 
+/* - Tap Dance Functions - */
 
 //determine the current tap dance state
 int cur_dance (qk_tap_dance_state_t *state){
@@ -577,6 +665,25 @@ qk_tap_dance_action_t tap_dance_actions[] = {
     [TAPPY_KEY] = ACTION_TAP_DANCE_FN_ADVANCED_TIME(NULL, tk_finished, tk_reset, 275)
 };
 
+// -----------
+
+
+bool process_record_user(uint16_t keycode, keyrecord_t *record) {  
+    #if OLED_USER_TIMEOUT > 0
+    oled_user_timeout = timer_read32(); // + OLED_USER_TIMEOUT;
+    #endif
+
+    hid_send_activity_ping();
+
+    // switch (keycode) {
+
+    // }
+
+    return true;
+
+}
+
+/* - Layer State Functions - */
 
 layer_state_t layer_state_set_user(layer_state_t state) {
 
@@ -630,3 +737,254 @@ layer_state_t layer_state_set_user(layer_state_t state) {
 
     return state;
 }
+
+// -----------
+
+
+/* - OLED Functions - */
+
+#ifdef OLED_DRIVER_ENABLE
+
+oled_rotation_t oled_init_user(oled_rotation_t rotation) {
+
+    oled_user_timeout = timer_read32();// + OLED_USER_TIMEOUT;
+    return OLED_ROTATION_0; 
+}
+
+
+
+// void oled_decrease_brightness(void){
+//     uint8_t current_brightness = oled_get_brightness();
+
+//     int16_t new_brightness = current_brightness - 5;   
+//     if(new_brightness <= 0){
+//         new_brightness = 0;
+//         oled_fade_direction = 0;
+//     }
+
+//     oled_set_brightness((uint8_t)new_brightness);
+// }
+
+// void oled_increase_brightness(void){
+//     uint8_t current_brightness = oled_get_brightness();
+
+//     uint16_t new_brightness = current_brightness + 5;
+//     if(new_brightness >= 255){
+//         new_brightness = 255;
+//         oled_fade_direction = 0;
+//     }
+//     oled_set_brightness((uint8_t)new_brightness);    
+// }
+
+void oled_fade_set_brightness(uint8_t level, uint8_t rate){
+    uint8_t current_brightness = oled_get_brightness();
+    if(current_brightness > level){
+        int16_t new_brightness = current_brightness - rate;   
+        if(new_brightness <= level){
+            new_brightness = level;
+        }
+        oled_set_brightness((uint8_t)new_brightness);
+    }else if(current_brightness < level){
+        uint16_t new_brightness = current_brightness + rate;
+        if(new_brightness >= level){
+            new_brightness = level;
+        }
+        oled_set_brightness((uint8_t)new_brightness);
+    }
+}
+
+
+void oled_render_backlight_brightness(void){
+    // Debug function
+
+    uint8_t current_brightness = oled_get_brightness();
+    char bright_buff[30];
+    snprintf(bright_buff, sizeof(bright_buff), "OLED Br: %u", current_brightness);
+    oled_write_ln(bright_buff, false);
+}
+
+void oled_render_timeout(void){
+    // Debug function
+
+    //  oled_timeout = timer_read32() + OLED_TIMEOUT;
+    uint32_t time_remaining = timer_elapsed32(oled_user_timeout);
+    char time_buff[30];
+    snprintf(time_buff, sizeof(time_buff), "%lu, %lu,  %lu", time_remaining, OLED_USER_TIMEOUT, oled_user_timeout);
+    oled_write_ln(time_buff, false);
+}
+
+void oled_render_hid_timeout(void){
+    // Debug function
+    
+    //  oled_timeout = timer_read32() + OLED_TIMEOUT;
+    uint16_t time_remaining = timer_elapsed(hid_disconection_timer);
+    char time_buff[30];
+    snprintf(time_buff, sizeof(time_buff), "%u,   %u", time_remaining, hid_disconection_timer);
+    oled_write_ln(time_buff, false);
+}
+
+bool oled_inactivity_check(void){
+    /*
+     Checks if the oled should be dimmed or turned off.
+     returns true if it should be off so we can avoid wtiting to the screen when off.
+     */
+    #if OLED_USER_TIMEOUT > 0
+
+    if(timer_elapsed32(oled_user_timeout) > OLED_USER_TIMEOUT) {
+        oled_off();
+        return true;
+    }else if(timer_elapsed32(oled_user_timeout) > OLED_DIMOUT){
+        // oled_write_ln_P(PSTR("Dimout!"), false);
+        oled_fade_set_brightness(1, 5);
+    }else{
+        // oled_write_ln_P(PSTR("Normal!!!"), false);
+        oled_fade_set_brightness(OLED_BRIGHTNESS, 15);
+    }
+    #endif
+
+    return false;
+}
+
+// static void render_kyria_logo(void) {
+//     static const char PROGMEM kyria_logo[] = {
+//         0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,128,128,192,224,240,112,120, 56, 60, 28, 30, 14, 14, 14,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7, 14, 14, 14, 30, 28, 60, 56,120,112,240,224,192,128,128,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+//         0,  0,  0,  0,  0,  0,  0,192,224,240,124, 62, 31, 15,  7,  3,  1,128,192,224,240,120, 56, 60, 28, 30, 14, 14,  7,  7,135,231,127, 31,255,255, 31,127,231,135,  7,  7, 14, 14, 30, 28, 60, 56,120,240,224,192,128,  1,  3,  7, 15, 31, 62,124,240,224,192,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+//         0,  0,  0,  0,240,252,255, 31,  7,  1,  0,  0,192,240,252,254,255,247,243,177,176, 48, 48, 48, 48, 48, 48, 48,120,254,135,  1,  0,  0,255,255,  0,  0,  1,135,254,120, 48, 48, 48, 48, 48, 48, 48,176,177,243,247,255,254,252,240,192,  0,  0,  1,  7, 31,255,252,240,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+//         0,  0,  0,255,255,255,  0,  0,  0,  0,  0,254,255,255,  1,  1,  7, 30,120,225,129,131,131,134,134,140,140,152,152,177,183,254,248,224,255,255,224,248,254,183,177,152,152,140,140,134,134,131,131,129,225,120, 30,  7,  1,  1,255,255,254,  0,  0,  0,  0,  0,255,255,255,  0,  0,  0,  0,255,255,  0,  0,192,192, 48, 48,  0,  0,240,240,  0,  0,  0,  0,  0,  0,240,240,  0,  0,240,240,192,192, 48, 48, 48, 48,192,192,  0,  0, 48, 48,243,243,  0,  0,  0,  0,  0,  0, 48, 48, 48, 48, 48, 48,192,192,  0,  0,  0,  0,  0,
+//         0,  0,  0,255,255,255,  0,  0,  0,  0,  0,127,255,255,128,128,224,120, 30,135,129,193,193, 97, 97, 49, 49, 25, 25,141,237,127, 31,  7,255,255,  7, 31,127,237,141, 25, 25, 49, 49, 97, 97,193,193,129,135, 30,120,224,128,128,255,255,127,  0,  0,  0,  0,  0,255,255,255,  0,  0,  0,  0, 63, 63,  3,  3, 12, 12, 48, 48,  0,  0,  0,  0, 51, 51, 51, 51, 51, 51, 15, 15,  0,  0, 63, 63,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 48, 48, 63, 63, 48, 48,  0,  0, 12, 12, 51, 51, 51, 51, 51, 51, 63, 63,  0,  0,  0,  0,  0,
+//         0,  0,  0,  0, 15, 63,255,248,224,128,  0,  0,  3, 15, 63,127,255,239,207,141, 13, 12, 12, 12, 12, 12, 12, 12, 30,127,225,128,  0,  0,255,255,  0,  0,128,225,127, 30, 12, 12, 12, 12, 12, 12, 12, 13,141,207,239,255,127, 63, 15,  3,  0,  0,128,224,248,255, 63, 15,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+//         0,  0,  0,  0,  0,  0,  0,  3,  7, 15, 62,124,248,240,224,192,128,  1,  3,  7, 15, 30, 28, 60, 56,120,112,112,224,224,225,231,254,248,255,255,248,254,231,225,224,224,112,112,120, 56, 60, 28, 30, 15,  7,  3,  1,128,192,224,240,248,124, 62, 15,  7,  3,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+//         0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  1,  3,  7, 15, 14, 30, 28, 60, 56,120,112,112,112,224,224,224,224,224,224,224,224,224,224,224,224,224,224,224,224,112,112,112,120, 56, 60, 28, 30, 14, 15,  7,  3,  1,  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0
+//     };
+//     oled_write_raw_P(kyria_logo, sizeof(kyria_logo));
+// }
+
+
+static void render_qmk_logo(bool render_at_bottom) {
+    /* 3 lines tall */
+    if(!is_oled_on()){
+        return;
+    }
+
+    if(render_at_bottom){
+        oled_set_cursor(0,5);  // Go to line 6128
+    }
+    static const char PROGMEM qmk_logo[] = {
+      0x80,0x81,0x82,0x83,0x84,0x85,0x86,0x87,0x88,0x89,0x8a,0x8b,0x8c,0x8d,0x8e,0x8f,0x90,0x91,0x92,0x93,0x94,
+      0xa0,0xa1,0xa2,0xa3,0xa4,0xa5,0xa6,0xa7,0xa8,0xa9,0xaa,0xab,0xac,0xad,0xae,0xaf,0xb0,0xb1,0xb2,0xb3,0xb4,
+      0xc0,0xc1,0xc2,0xc3,0xc4,0xc5,0xc6,0xc7,0xc8,0xc9,0xca,0xcb,0xcc,0xcd,0xce,0xcf,0xd0,0xd1,0xd2,0xd3,0xd4,0};
+
+    oled_write_ln_P(qmk_logo, false);
+
+    if(render_at_bottom){
+        oled_set_cursor(0,0);  // Go back to line 1
+    }
+}
+
+
+void render_layer_state(void) {
+    /* 12 char long  (9 char left on line)*/
+
+    oled_write_P(PSTR("Layer: "), false);
+
+    // Layer name must be 5 characters long.
+    switch (get_highest_layer(layer_state)) {
+        case _BASE:               
+            oled_write_P(PSTR("TKL  "), false);
+            break;
+        case _FUNCTION:
+            oled_write_P(PSTR("Func "), false);
+            break;
+        case _MEDIA:
+            oled_write_P(PSTR("Media"), false);
+            break;
+        case _RGB_LAYER:
+            oled_write_P(PSTR("RGB  "), false);
+            break;
+        default:
+            oled_write_P(PSTR("Undef"), false);
+    }
+
+    oled_write_ln_P(PSTR(""), false);
+}
+
+
+void render_current_fronter(void){
+
+  if (check_hid_timeout()){
+
+    oled_write_P(PSTR("Amadea Sys    "), false);
+
+    // Member name must be 7 characters long.
+    switch (current_fronter) {
+        case MEM_SWITCHED_OUT:
+            oled_write_P(PSTR("  Sleep"), false);
+            break;
+        case MEM_FLUTTERSHY:
+            oled_write_P(PSTR("Flutter"), false);
+            break;
+        case MEM_HIBIKI:
+            oled_write_P(PSTR(" Hibiki"), false);
+            break;
+        case MEM_LUNA:
+            oled_write_P(PSTR("   Luna"), false);
+            // oled_write_P(PSTR("Flutter"), false);
+            break;
+        case 255:
+            oled_write_P(PSTR("  Error"), false);
+            break;
+    }
+  }else{
+    oled_write_P(PSTR("    Amadea System    "), false);
+  }
+}
+
+
+
+void oled_task_user(void) {
+    /* 21 character screen width. 7 lines high*/
+    render_qmk_logo(true);  // Must be first!
+
+    if(oled_inactivity_check()){
+        return;
+    }
+
+    render_current_fronter();
+    oled_write_ln_P(PSTR(""), false);
+
+    render_layer_state();
+    // render_corne_logo();
+    // oled_write_ln_P(PSTR(""), false);
+    // render_qmk_logo();
+    // oled_write_ln_P(PSTR(""), false);
+    // render_keyboard();
+    // oled_write_ln_P(PSTR(""), false);
+    // render_kb_split();
+    // oled_write_ln_P(PSTR(""), false);
+
+    // render_layer();
+    // render_audio_status();
+    // render_clicky_status();
+    // render_rgb_status();
+
+
+    // render_mod_ctrl();
+    // render_mod_alt();
+    // oled_write_P(PSTR(" "), false);
+    // render_mod_shift();
+    // render_mod_gui();
+    // render_mod_mouse(); 
+    
+
+    // render_logo_thing();
+
+    // oled_write_P(PSTR(" "), false);
+    // oled_render_backlight_brightness();
+    // oled_render_timeout();
+
+
+    // oled_render_hid_timeout();
+
+}
+
+#endif  // -OLED_DRIVER_ENABLE

@@ -33,6 +33,22 @@ enum tap_dance_keycodes{
     TAPPY_KEY = 0
 };
 
+// Layer Definitions
+enum layer_number {
+    _BASE = 0,
+    _FUNCTION,
+    _MEDIA,
+    _RGB_LAYER
+};
+
+// Status LED Brightness
+enum status_led_brightness_enum {
+    _BASE_BRIGHTNESS = 1,
+    _FUNCTION_LAYER_BRIGHTNESS = 8,
+    _MEDIA_LAYER_BRIGHTNESS = 16,
+};
+
+// Map system members to internal ID
 enum system_members {
     MEM_SWITCHED_OUT = 0,
     MEM_FLUTTERSHY,
@@ -40,7 +56,7 @@ enum system_members {
     MEM_LUNA
 };
 
-
+// HID Command Protocol Identifiers
 enum hid_commands {
     CMD_DO_NOTHING = 0,  // Do Nothing
 
@@ -48,10 +64,12 @@ enum hid_commands {
     CMD_KB_SET_CURRENT_FRONTER = 1,
     CMD_KB_SET_ALL_RGB_LEDS,
     CMD_KB_SET_RGB_LEDS,
+    CMD_KB_ACTIVITY_PING,
 
     // CMDs Sent To PC
     CMD_PC_RAW_DEBUG_MSG = 120,
     CMD_PC_DEBUG_MSG,
     CMD_PC_SWITCH_FRONTER,
-    CMD_PC_NOTIFY_LAYER_CHANGE
+    CMD_PC_NOTIFY_LAYER_CHANGE,
+    CMD_PC_ACTIVITY_PING
 };
