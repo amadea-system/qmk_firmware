@@ -53,7 +53,8 @@ extern uint8_t is_master;
 // HID Vars
 uint8_t current_fronter = MEM_SWITCHED_OUT;
 bool hid_connected = false; // Flag indicating if we have a PC connection yet
-static uint16_t hid_disconection_timer;
+static uint16_t hid_disconection_timer = 0;
+static uint16_t activity_ping_timer = 0;
 
 
 #ifdef UNICODEMAP_ENABLE
@@ -61,24 +62,28 @@ static uint16_t hid_disconection_timer;
   enum unicode_names {
       MOON,
       BUTTERFLY,
-      SMILE_CAT
+      SMILE_CAT,
+      INTROBANG
   };
 
   const uint32_t PROGMEM unicode_map[] = {
-      [MOON] = 0x1F319,      //🌙
+      [MOON]      = 0x1F319, //🌙
       [BUTTERFLY] = 0x1F98B, //🦋
-      [SMILE_CAT] = 0x1F63A  //😺
+      [SMILE_CAT] = 0x1F63A, //😺
+      [INTROBANG] = 0x203D,  // ‽
   };
 
 
   #define E_MOON X(MOON)
   #define E_BFLY X(BUTTERFLY)
   #define E_S_CAT X(SMILE_CAT)
+  #define E_INTRO X(INTROBANG)
 #else
   // #ifdef UNICODE_ENABLE
     #define E_MOON XXXXXXX
     #define E_BFLY XXXXXXX
     #define E_S_CAT XXXXXXX
+    #define E_INTRO XXXXXXX
   // #endif
 #endif
 
@@ -165,7 +170,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
 /* RAISE - Acessed by pressing 'Raise' Key
  * ,-----------------------------------------.                    ,-----------------------------------------.
- * |      |  🌙  |  🦋 |  😺 |      |      |                    |      |      |      |      |      |Vol Up|
+ * |      |  ‽   |  🌙  |  🦋 |  😺 |      |                    |      |      |      |      |      |Vol Up|
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
  * |      |      |      |      |      |      |                    |      |      |GUI Up|      |      |Vol Dw|
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
@@ -189,7 +194,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 */
 
 [_RAISE] = LAYOUT( \
-  XXXXXXX, E_MOON,  E_BFLY,  E_S_CAT, XXXXXXX, XXXXXXX,                     XXXXXXX, XXXXXXX,       XXXXXXX,       XXXXXXX,       XXXXXXX, KC_AUDIO_VOL_UP, \
+  XXXXXXX, E_INTRO,  E_MOON,  E_BFLY,  E_S_CAT, XXXXXXX,                     XXXXXXX, XXXXXXX,       XXXXXXX,       XXXXXXX,       XXXXXXX, KC_AUDIO_VOL_UP, \
   XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,                     XXXXXXX, XXXXXXX,       LGUI(KC_UP),   XXXXXXX,       XXXXXXX, KC_AUDIO_VOL_DOWN, \
   KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5,   KC_F6,                       XXXXXXX, LGUI(KC_LEFT), LGUI(KC_DOWN), LGUI(KC_RGHT), XXXXXXX, KC_AUDIO_MUTE, \
   KC_F7,   KC_F8,   KC_F9,   KC_F10,  KC_F11,  KC_F12,   _______, _______,  KC_PLUS, KC_MINS,       KC_EQL,        KC_LBRC,       KC_RBRC, KC_BSLS, \
@@ -369,6 +374,20 @@ void set_rgblight_from_pc_cmd(uint8_t *led_data, uint8_t length){  // 128 Bytes.
 
 }
 #endif
+
+
+void hid_send_activity_ping(void){
+
+    if (!hid_connected || timer_elapsed(activity_ping_timer) < 5000) {
+        // Only send a ping once every 5 seconds and only if we are connected.
+        return;
+    }
+
+    activity_ping_timer = timer_read();  // Reset the activity ping timer
+    uint8_t send_data[32] = {0};  // data packet must be 32 bytes on 8bit AVR platform
+    send_data[0] = CMD_PC_ACTIVITY_PING;
+    raw_hid_send(send_data, sizeof(send_data));
+}
 
 
 void raw_hid_send_command(uint8_t command_id, uint8_t *data, uint8_t length) {
@@ -576,7 +595,9 @@ void oled_task_user(void) {
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 
-  // -- OLED Code -- //
+    hid_send_activity_ping();
+    
+    // -- OLED Code -- //
     #ifdef OLED_DRIVER_ENABLE
     // set_keylog(keycode, record);
     #endif

@@ -31,9 +31,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #undef RGBLED_NUM
 #define RGBLED_NUM 10
 #define RGB_DI_PIN F4
-#define RGBLIGHT_LIMIT_VAL 150
+#define RGBLIGHT_LIMIT_VAL 100
 
-#define RGBLIGHT_ANIMATIONS
+#undef RGBLIGHT_ANIMATIONS
 
+
+// -- OLED config --
+#define OLED_DISPLAY_128X64
+#define OLED_UPDATE_INTERVAL 50   // Sets the update rate of the OLED display in ms. Greatly improves the matrix scan rate.
+#define OLED_TIMEOUT 0            // We are implementing our own timeout since the way we are drawing to the screan is preventing the builting one from working.
+#define OLED_USER_TIMEOUT 120000
+#define OLED_DIMOUT 60000
+// #define OLED_FONT_H "font.h"
 
 
