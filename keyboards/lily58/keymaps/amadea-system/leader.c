@@ -32,7 +32,8 @@ extern uint8_t current_fronter;
 
 LEADER_EXTERNS();
 
-void matrix_scan_user(void) {
+// void matrix_scan_user(void) {
+void process_leader_key_user(void) {
     LEADER_DICTIONARY() {
         leading = false;
         leader_end();
@@ -60,6 +61,10 @@ void matrix_scan_user(void) {
         SEQ_ONE_KEY(KC_R) { SEND_STRING("Luna\\ "); }           //Luna
         SEQ_ONE_KEY(KC_L) { SEND_STRING(":crescent_moon: "); }  //Luna
         SEQ_ONE_KEY(KC_F) { SEND_STRING("/f "); }               //Fluttershy
+
+        // -- Edit Proxy Tags -- //
+        // It's a good idea to omit the enter just incase the wrong message gets edited.
+        SEQ_TWO_KEYS(KC_R, KC_R) { SEND_STRING(SS_TAP(X_UP) SS_TAP(X_UP) "Luna\\ "); } //Luna
 
         // Autoproxy
         SEQ_ONE_KEY(KC_G) {

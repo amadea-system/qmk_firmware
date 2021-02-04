@@ -56,6 +56,15 @@ bool hid_connected = false; // Flag indicating if we have a PC connection yet
 static uint16_t hid_disconection_timer = 0;
 static uint16_t activity_ping_timer = 0;
 
+bool send_activity_ping = false;
+static uint16_t last_hid_transmition_time = 0;
+
+/* ----------- Function Defs --------- */
+void process_leader_key_user(void);
+void hid_send_activity_ping(void);
+
+// -----------
+
 
 #ifdef UNICODEMAP_ENABLE
   // --- Unicode Map --- //
@@ -328,6 +337,14 @@ void keyboard_post_init_user(void) {
 
 }
 
+
+void matrix_scan_user(void) {
+
+    process_leader_key_user();
+    hid_send_activity_ping();
+
+}
+
 // -- HID Code --
 
 #ifdef RGBLIGHT_ENABLE
@@ -378,11 +395,11 @@ void set_rgblight_from_pc_cmd(uint8_t *led_data, uint8_t length){  // 128 Bytes.
 
 void hid_send_activity_ping(void){
 
-    if (!hid_connected || timer_elapsed(activity_ping_timer) < 5000) {
+    if (!send_activity_ping || !hid_connected || timer_elapsed(activity_ping_timer) < 5000 || timer_elapsed(last_hid_transmition_time) < 100) {
         // Only send a ping once every 5 seconds and only if we are connected.
         return;
     }
-
+    send_activity_ping = false;
     activity_ping_timer = timer_read();  // Reset the activity ping timer
     uint8_t send_data[32] = {0};  // data packet must be 32 bytes on 8bit AVR platform
     send_data[0] = CMD_PC_ACTIVITY_PING;
@@ -398,11 +415,15 @@ void raw_hid_send_command(uint8_t command_id, uint8_t *data, uint8_t length) {
 * Byte 2-31: Command Data 
 *
 */
+    last_hid_transmition_time = timer_read();  // Reset the hid transmition timer
     uint8_t send_data[32] = {0};  // data packet must be 32 bytes on 8bit AVR platform
     send_data[0] = command_id;
     send_data[1] = length;
     memcpy(&send_data[2], data, length);
     raw_hid_send(send_data, sizeof(send_data));
+
+    // // wait for just a short bit to avoid loosing a hid packet.
+    // wait_ms(5);
 }
 
 
@@ -595,7 +616,8 @@ void oled_task_user(void) {
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 
-    hid_send_activity_ping();
+    // hid_send_activity_ping();
+    send_activity_ping = true;
     
     // -- OLED Code -- //
     #ifdef OLED_DRIVER_ENABLE
@@ -627,12 +649,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 // return false;
                 break;
             case CK_SW_TEST:
-                if(current_fronter == MEM_LUNA){
-                    current_fronter = 0;
-                }else{
-                    current_fronter += 1;
-                }
-                set_rgblight_current_fronter(current_fronter);
+                SEND_STRING("TEST!");
                 break;
         }
     }
