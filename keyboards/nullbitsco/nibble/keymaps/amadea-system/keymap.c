@@ -66,7 +66,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * |------||--------------------------------------------------------------------------------------------------|
  * |Prox L|| L-Shift |  A  |  S  |  D  |  F  |  G  |  H  |  J  |  K  |  L  |  ;  |  '  |    Enter      |Pg Up |
  * |------||--------------------------------------------------------------------------------------------------|
- * |  F15 ||   Ctrl    |  Z  |  X  |  C  |  V  |  B  |  N  |  M  |  ,  |  .  |  /  |    Raise    | Up  |Pg Dn |
+ * |  F15 ||   Ctrl    |  Z  |  X  |  C  |  V  |  B  |  N  |  M  |  ,  |  .  |  /  |   R-Shift   | Up  |Pg Dn |
  * |------||--------------------------------------------------------------------------------------------------|
  * | XXXX || XXXX |  Gui  |  Alt  |    Space     | Lower |    Enter   |  Raise  |    GUI   | Lft | Dwn | Rht  |
  * `------'`--------------------------------------------------------------------------------------------------'
@@ -93,7 +93,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * |------||--------------------------------------------------------------------------------------------------|
  * |Prox L|| L-Shift | -A  | -S  | -D  | -F  | -G  | -H  | -J  | -K  | -L  | -;  | -'  |    Enter      | Home |
  * |------||--------------------------------------------------------------------------------------------------|
- * |  F15 ||   Ctrl    |  Z  |  X  |  C  |  V  |  B  |  N  |  M  |  ,  |  .  |  /  |    Raise    |Pg Up| End  |
+ * |  F15 ||   Ctrl    |  Z  |  X  |  C  |  V  |  B  |  N  |  M  |  ,  |  .  |  /  |   R-Shift   |Pg Up| End  |
  * |------||--------------------------------------------------------------------------------------------------|
  * | XXXX || XXXX |  Gui  |  Alt  |    Space     | Lower |    Enter   |   Alt   |    GUI   | Lft |Pg Dn| Rht  |
  * `------'`--------------------------------------------------------------------------------------------------'
@@ -117,7 +117,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * |------||--------------------------------------------------------------------------------------------------|
  * |Sw Lun|| L-Shift | -A  | -S  | -D  | -F  | -G  | -H  | -J  | -K  | -L  | -;  | -'  |    Enter      | Home |
  * |------||--------------------------------------------------------------------------------------------------|
- * |Sw Hib||   Ctrl    |  Z  |  X  |  C  |  V  |W BAK|Nyaa |  M  |  ,  |  .  |  /  |    Raise    |GUI U| End  |
+ * |Sw Hib||   Ctrl    |  Z  |  X  |  C  |  V  |W BAK|Nyaa |  M  |  ,  |  .  |  /  |   R-Shift   |GUI U| End  |
  * |------||--------------------------------------------------------------------------------------------------|
  * | XXXX || XXXX |  Gui  |  Alt  |    Space     | Lower |    Enter   |   Alt   |    GUI   |GUI L|GUI D| GUI R|
  * `------'`--------------------------------------------------------------------------------------------------'
@@ -424,22 +424,22 @@ void render_layer_and_fronter(void){
 extern rgblight_config_t rgblight_config;
 void render_rgb_state(void) {
 
-    // char buf[30];
+    char rgb_info_str[22];
 
-    // snprintf(buf, sizeof(buf), " LED %2d: %d,%d,%d ",
-    //          rgblight_get_mode(),
-    //          rgblight_get_hue()/RGBLIGHT_HUE_STEP,
-    //          rgblight_get_sat()/RGBLIGHT_SAT_STEP,
-    //          rgblight_get_val()/RGBLIGHT_VAL_STEP);
-    // oled_write(buf, false);
+        // snprintf(rgb_info_str, sizeof(rgb_info_str), "RGB %2d H%3d S%3d V%3d",//" LED %2d: %3d,%3d,%3d ",
+        //      rgblight_get_mode(),
+        //      (uint8_t)((rgblight_get_hue()*100)/255),
+        //      (uint8_t)((rgblight_get_sat()*100)/255),
+        //      (uint8_t)((rgblight_get_val()*100)/255));
 
-    char rbf_info_str[24];
-    snprintf(rbf_info_str, sizeof(rbf_info_str), "%s %2d h%3d s%3d v%3d",
-             rgblight_config.enable ? "on" : "- ", rgblight_config.mode,
+    snprintf(rgb_info_str, sizeof(rgb_info_str), "RGB %2d H%3d S%3d V%3d",   //"%s %2d h%3d s%3d v%3d",
+            //  rgblight_config.enable ? "on" : "- ",
+             rgblight_config.mode,
              (uint8_t)((rgblight_config.hue*100)/255), 
              (uint8_t)((rgblight_config.sat*100)/255), 
              (uint8_t)((rgblight_config.val*100)/255));
-    oled_write(rbf_info_str, false);
+
+    oled_write(rgb_info_str, false);
 }
 #endif // RGBLIGHT_ENABLE
 
