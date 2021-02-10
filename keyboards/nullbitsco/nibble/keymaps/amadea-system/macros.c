@@ -25,6 +25,7 @@
 
 
 #include "quantum.h"
+#include "version.h"  // For the Version Macro
 #include "nibble65_keymap_enums.h"
 
 void raw_hid_send_command(uint8_t command_id, uint8_t *data, uint8_t length);

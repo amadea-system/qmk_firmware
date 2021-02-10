@@ -17,33 +17,57 @@
 
 #pragma once
 
+/* ------- Feature Configs ------- */
 
-// -- ARGB Underlight Config -- 
-// #define RGBLIGHT_LIMIT_VAL 50
+/* -- ARGB Underlight Config -- */
+// -- Animations
 #undef RGBLIGHT_ANIMATIONS
 #define RGBLIGHT_EFFECT_BREATHING
 #define RGBLIGHT_EFFECT_RAINBOW_MOOD
 #define RGBLIGHT_EFFECT_RAINBOW_SWIRL
 #define RGBLIGHT_EFFECT_SNAKE
 #define RGBLIGHT_EFFECT_KNIGHT
-#define RGBLIGHT_EFFECT_CHRISTMAS
 #define RGBLIGHT_EFFECT_STATIC_GRADIENT
-// #define RGBLIGHT_EFFECT_RGB_TEST
 #define RGBLIGHT_EFFECT_ALTERNATING
 #define RGBLIGHT_EFFECT_TWINKLE
+// #define RGBLIGHT_EFFECT_CHRISTMAS
+// #define RGBLIGHT_EFFECT_RGB_TEST
 
+// -- Animation Settings
 #define RGBLIGHT_EFFECT_BREATHE_CENTER 1.0
 
-// -- OLED config --
+// -- RGB Settings
+// #define RGBLIGHT_LIMIT_VAL 50
+
+
+/* -- OLED config -- */
 #define OLED_UPDATE_INTERVAL 50   // Sets the update rate of the OLED display in ms. Greatly improves the matrix scan rate.
 
 
-// -- NKRO Config --
+/* -- NKRO Config -- */
 #undef FORCE_NKRO  // Had to undef, then redefine to actually get it to activate.
 #define FORCE_NKRO
 
+/* -- Leader Keys Config -- */
+#define LEADER_PER_KEY_TIMING
+#define LEADER_TIMEOUT 350  //  250
 
-// ------- Keyboard Layouts -------
+
+/* -- Compile Space Savings Config -- */
+// Saves a bunch of space (>1kb) but limits to 8/16 layers
+#define LAYER_STATE_8BIT
+// #define LAYER_STATE_16BIT
+
+/* Disable unused and unneeded features to reduce on firmware size */
+#ifdef LOCKING_SUPPORT_ENABLE
+#    undef LOCKING_SUPPORT_ENABLE
+#endif
+#ifdef LOCKING_RESYNC_ENABLE
+#    undef LOCKING_RESYNC_ENABLE
+#endif
+
+
+/* ------- Keyboard Layouts ------- */
 
 #define ___ KC_NO
 
