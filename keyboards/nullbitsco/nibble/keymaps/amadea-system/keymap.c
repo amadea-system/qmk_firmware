@@ -15,7 +15,7 @@
  */
 #include QMK_KEYBOARD_H
 
-#include "nibble65_keymap_enums.h"
+#include "nibble65_keymap.h"
 
 #include "version.h"  // For the Version Macro
 #include "raw_hid.h"
@@ -24,6 +24,7 @@
 #ifdef LEADER_ENABLE
 #include "leader.c"
 #endif
+
 
 
 /* ------------ # Defines ------------ */
@@ -43,6 +44,7 @@ static uint16_t activity_ping_timer = 0;
 bool send_activity_ping = false;
 static uint16_t last_hid_transmition_time = 0;
 
+uint32_t last_led_changed_time = 0;
 
 /* ----------- Function Defs --------- */
 
@@ -52,6 +54,21 @@ void raw_hid_send_command(uint8_t command_id, uint8_t *data, uint8_t length);
 bool check_hid_timeout(void);
 void hid_send_activity_ping(void);
 
+/* ------ External Function Def ------ */
+
+// -- oled_display.c --
+void render_top_header(void);
+void render_layer_state(void);
+void render_current_fronter(void);
+void render_layer_and_fronter(void);
+void render_rgb_state(void);
+
+
+// -- amadea_hid.c --
+
+
+
+/* -------------- KeyMaps ------------ */
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
@@ -104,7 +121,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * |------||--------------------------------------------------------------------------------------------------|
  * |  F15 ||   Ctrl    |  Z  |  X  |  C  |  V  |  B  |  N  |  M  |  ,  |  .  |  /  |   R-Shift   |Pg Up| End  |
  * |------||--------------------------------------------------------------------------------------------------|
- * | XXXX || XXXX |  Gui  |  Alt  |    Space     | Lower |    Enter   |   Alt   |    GUI   | Lft |Pg Dn| Rht  |
+ * | XXXX ||Leader|  Gui  |  Alt  |    Space     | Lower |    Enter   |   Alt   |    GUI   | Lft |Pg Dn| Rht  |
  * `------'`--------------------------------------------------------------------------------------------------'
  */
 
@@ -189,7 +206,7 @@ void encoder_change_RGB(bool clockwise) {
             rgblight_step();
         }
 
-  } else {
+    } else {
       if (alt) {
             rgblight_decrease_hue();
         } else if (ctrl) {
@@ -200,6 +217,8 @@ void encoder_change_RGB(bool clockwise) {
             rgblight_step_reverse();
         }
     } 
+
+    last_led_changed_time = timer_read32(); 
 }
 
 void encoder_update_kb(uint8_t index, bool clockwise) {
@@ -232,12 +251,15 @@ void set_rgblight_current_fronter(uint8_t fronter){
             rgblight_sethsv_noeeprom(HSV_PURPLE);
             break;
         case MEM_LUNA:
-            rgblight_sethsv_noeeprom(HSV_BLUE);
+            // rgblight_sethsv_noeeprom(HSV_BLUE);
+            rgblight_sethsv_noeeprom(94, 255, 255);  // Pink
             break;
         default:
             rgblight_sethsv_noeeprom(HSV_RED);
             break;
     }
+
+    last_led_changed_time = timer_read32(); 
 }
 
 // https://github.com/qmk/qmk_firmware/blob/master/quantum/rgblight.h
@@ -259,9 +281,15 @@ void set_rgblight_from_pc_cmd(uint8_t *led_data, uint8_t length){  // 128 Bytes.
         sethsv(led_data[i+1], led_data[i+2], led_data[i+3], (LED_TYPE *) &led[led_data[i]]);  // Hue, Sat, Val, LED Num
     }
     rgblight_set();
+
+    last_led_changed_time = timer_read32(); 
 }
 #endif  // -RGBLIGHT_ENABLE
 
+
+void send_hid_debug(uint8_t *data){
+    raw_hid_send_command(CMD_PC_RAW_DEBUG_MSG, data, sizeof(data));
+}
 
 void hid_send_activity_ping(void){
 
@@ -362,101 +390,27 @@ bool check_hid_timeout(void){
 oled_rotation_t oled_init_user(oled_rotation_t rotation) { return OLED_ROTATION_0; }
 
 
+// bool oled_inactivity_check(void){
+//     /*
+//      Checks if the oled should be dimmed or turned off.
+//      returns true if it should be off so we can avoid wtiting to the screen when off.
+//      */
+//     #if OLED_USER_TIMEOUT > 0
 
-void render_top_header(void){
-    oled_write_P(PSTR("_Layer_"), false);    // 7 Chars
-    oled_write_P(PSTR("     "), false);      // 5 Chars
-    oled_write_P(PSTR("_Fronter_"), false);  // 9 Chars
-}
+//     if(timer_elapsed32(oled_user_timeout) > OLED_USER_TIMEOUT) {
+//         oled_off();
+//         return true;
+//     }else if(timer_elapsed32(oled_user_timeout) > OLED_DIMOUT){
+//         // oled_write_ln_P(PSTR("Dimout!"), false);
+//         oled_fade_set_brightness(1, 5);
+//     }else{
+//         // oled_write_ln_P(PSTR("Normal!!!"), false);
+//         oled_fade_set_brightness(OLED_BRIGHTNESS, 15);
+//     }
+//     #endif
 
-
-void render_layer_state(void) {
-    /* 6 char long */
-
-    // Layer name must be 6 characters long.
-    switch (get_highest_layer(layer_state)) {
-        case _QWERTY:               
-            oled_write_P(PSTR("QWERTY"), false);
-            break;
-        case _LOWER:
-            oled_write_P(PSTR("Lower "), false);
-            break;
-        case _RAISE:
-            oled_write_P(PSTR("Macros"), false);
-            break;
-        default:
-            oled_write_P(PSTR("Undef "), false);
-    }
-}
-
-void render_current_fronter(void){
-    /* 6 char long */
-
-    if (check_hid_timeout()){
-        switch (current_fronter) {
-            case MEM_SWITCHED_OUT:
-                oled_write_P(PSTR("  Sleep"), false);
-                break;
-            case MEM_FLUTTERSHY:
-                oled_write_P(PSTR("Flutter"), false);
-                break;
-            case MEM_HIBIKI:
-                oled_write_P(PSTR(" Hibiki"), false);
-                break;
-            case MEM_LUNA:
-                oled_write_P(PSTR("   Luna"), false);
-                break;
-            case 255:
-                oled_write_P(PSTR("  Error"), false);
-                break;
-        }
-    }else{
-      oled_write_P(PSTR(" Discon"), false);
-    }
-}
-
-void render_layer_and_fronter(void){
-
-    render_layer_state();     // 6 char
-    oled_write_P(PSTR("        "), false);      // 8 Chars
-    render_current_fronter(); // 7 char
-
-}
-
-// extern rgblight_config_t rgblight_config;
-// void render_rgb_status(void){
-
-//     oled_write("", false);
-
-//   snprintf(rbf_info_str, sizeof(rbf_info_str), "%s %2d h%3d s%3d v%3d",
-//     rgblight_config.enable ? "on" : "- ", rgblight_config.mode,
-//     rgblight_config.hue, rgblight_config.sat, rgblight_config.val);
-//   return rbf_info_str;
+//     return false;
 // }
-
-#ifdef RGBLIGHT_ENABLE
-extern rgblight_config_t rgblight_config;
-void render_rgb_state(void) {
-
-    char rgb_info_str[22];
-
-        // snprintf(rgb_info_str, sizeof(rgb_info_str), "RGB %2d H%3d S%3d V%3d",//" LED %2d: %3d,%3d,%3d ",
-        //      rgblight_get_mode(),
-        //      (uint8_t)((rgblight_get_hue()*100)/255),
-        //      (uint8_t)((rgblight_get_sat()*100)/255),
-        //      (uint8_t)((rgblight_get_val()*100)/255));
-
-    snprintf(rgb_info_str, sizeof(rgb_info_str), "RGB %2d H%3d S%3d V%3d",   //"%s %2d h%3d s%3d v%3d",
-            //  rgblight_config.enable ? "on" : "- ",
-             rgblight_config.mode,
-             (uint8_t)((rgblight_config.hue*100)/255), 
-             (uint8_t)((rgblight_config.sat*100)/255), 
-             (uint8_t)((rgblight_config.val*100)/255));
-
-    oled_write(rgb_info_str, false);
-}
-#endif // RGBLIGHT_ENABLE
-
 
 
 void oled_task_user(void) {
@@ -472,8 +426,7 @@ void oled_task_user(void) {
     oled_write_P(PSTR("    Amadea System    "), false);
     render_rgb_state();
 
-    
-
     // oled_write_ln_P(PSTR("5"), false);
 }
+
 #endif  // -OLED_DRIVER_ENABLE

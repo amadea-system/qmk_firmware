@@ -20,7 +20,7 @@
 #pragma once
 
 
-/* ----------- Enums --------- */
+/* ---------------- Enums -------------- */
 
 enum custom_keycodes {
     /*  Utility Macros  */
@@ -72,3 +72,7 @@ enum hid_commands {
     CMD_PC_NOTIFY_LAYER_CHANGE,
     CMD_PC_ACTIVITY_PING
 };
+
+
+/* --------- External Functions --------- */
+bool check_hid_timeout(void);

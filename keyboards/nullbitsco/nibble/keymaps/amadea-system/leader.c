@@ -27,7 +27,7 @@
 
 
 #include "quantum.h"
-#include "nibble65_keymap_enums.h"
+#include "nibble65_keymap.h"
 
 extern uint8_t current_fronter;
 

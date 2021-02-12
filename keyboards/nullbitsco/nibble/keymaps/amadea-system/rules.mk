@@ -21,5 +21,6 @@ KEY_LOCK_ENABLE = no
 
 # --- .C Includes --- #
 # Code for Leader Keys, Macros, Tap Dance, Etc
-# SRC +=  leader.c #\
+SRC +=  oled_display.c \
+#		leader.c #\
 #		macros.c
