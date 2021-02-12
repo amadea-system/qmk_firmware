@@ -104,6 +104,7 @@ static uint16_t activity_ping_timer = 0;
 
 // - OLED Variables - 
 static uint32_t oled_user_timeout = 0;
+// static uint16_t oled_countdown_timer = 0;
 
 
 /* ----------- Function Defs --------- */
@@ -155,9 +156,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
     /* function layer - Accessed with a Single Hold - Pink
     * ,--------------------.
-    * |______| Mute | VolUp|
+    * |______| VolUp|      |
     * |------+------+------|
-    * | Enter| Mute | VolDn|
+    * |      | VolDn| Mute |
     * \--------------------/
     *        '------'
     *        |______|
@@ -175,9 +176,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
     /* media function layer - Accessed with a Single Tap  - Yellow
     * ,--------------------.
-    * |______| Reset| VolUp|
+    * |______| VolUp|      |
     * |------+------+------|
-    * | Mute |______| VolDn|
+    * |      | VolDn| Mute |
     * \--------------------/
     *        '------'
     *        | Space|
@@ -202,7 +203,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     *        '------'
     *        | SAT+ |
     * '------+------+------'
-    * | Mode | SAT- |______|
+    * | Mode | SAT- |      |
     * '--------------------'
     */
     [_RGB_LAYER] = LAYOUT(/* RGB layer */
@@ -210,7 +211,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
                  RGB_TOG,   RGB_HUD,    RGB_VAD,
                  
                             RGB_SAI,
-                 RGB_MOD,   RGB_SAD,    KC_TRNS),
+                 RGB_MOD,   RGB_SAD,    XXXXXXX),
 
 };
 
@@ -885,27 +886,34 @@ static void render_qmk_logo(bool render_at_bottom) {
 void render_layer_state(void) {
     /* 12 char long  (9 char left on line)*/
 
-    oled_write_P(PSTR("Layer: "), false);
-
+    // oled_write_P(PSTR("Layer: "), false);
     // Layer name must be 5 characters long.
+    if(get_highest_layer(layer_state) == _BASE){
+        oled_write_P(PSTR("Layer: "), false);
+    }else{
+        // oled_set_cursor(16, 0);
+        // oled_write_P(PSTR("                "), false);
+        oled_write_P(PSTR("----------------"), false);
+    }
+
     switch (get_highest_layer(layer_state)) {
-        case _BASE:               
-            oled_write_P(PSTR("TKL  "), false);
+        case _BASE:
+            oled_write_ln_P(PSTR("TKL  "), false);
             break;
         case _FUNCTION:
-            oled_write_P(PSTR("Func "), false);
+            oled_write_P(PSTR(" Func"), false);
             break;
         case _MEDIA:
             oled_write_P(PSTR("Media"), false);
             break;
         case _RGB_LAYER:
-            oled_write_P(PSTR("RGB  "), false);
+            oled_write_P(PSTR("  RGB"), false);
             break;
         default:
             oled_write_P(PSTR("Undef"), false);
     }
 
-    oled_write_ln_P(PSTR(""), false);
+    // oled_write_ln_P(PSTR(""), false);
 }
 
 
@@ -939,10 +947,7 @@ void render_current_fronter(void){
   }
 }
 
-
-
-void oled_task_user(void) {
-    /* 21 character screen width. 7 lines high*/
+void render_default_screen(void){
     render_qmk_logo(true);  // Must be first!
 
     if(oled_inactivity_check()){
@@ -953,38 +958,122 @@ void oled_task_user(void) {
     oled_write_ln_P(PSTR(""), false);
 
     render_layer_state();
-    // render_corne_logo();
-    // oled_write_ln_P(PSTR(""), false);
-    // render_qmk_logo();
-    // oled_write_ln_P(PSTR(""), false);
-    // render_keyboard();
-    // oled_write_ln_P(PSTR(""), false);
-    // render_kb_split();
-    // oled_write_ln_P(PSTR(""), false);
 
-    // render_layer();
-    // render_audio_status();
-    // render_clicky_status();
-    // render_rgb_status();
+    // make sure the text from the keyhints are cleared
+    oled_write_ln_P(PSTR(""), false);
+    oled_write_ln_P(PSTR(""), false);
+}
+
+void render_keyhint_horz_sep(void){
+    oled_write_ln_P(PSTR("------+------+------"), false);
+}
+
+// void render_keyhint_key(const char *key_text, bool last_key_in_row){
+//     oled_write_P(key_text, false);
+
+//     if (last_key_in_row){
+//         oled_advance_page(true);
+//     }else{
+//         oled_write_P(PSTR("|"), false);
+//     }
+// }
+
+void render_keyhint_keyRow(const char *first_key, const char *second_key, const char *third_key){
+
+    /* Doing a single direct oled_write would be more efficent (codespace) but this is nicer. */
+    oled_write_P(first_key, false);
+    oled_write_P(PSTR("|"), false);
+    oled_write_P(second_key, false);
+    oled_write_P(PSTR("|"), false);
+    oled_write_ln_P(third_key, false);
+}
 
 
-    // render_mod_ctrl();
-    // render_mod_alt();
-    // oled_write_P(PSTR(" "), false);
-    // render_mod_shift();
-    // render_mod_gui();
-    // render_mod_mouse(); 
+#define BLANK_KEY PSTR("      ")
+#define __BLANK__KEY__ BLANK_KEY
+void render_keyhints_L_fn(void){
+
+    render_layer_state();
+
+    render_keyhint_keyRow(PSTR(" Tappy"), PSTR(" VolUp"), __BLANK__KEY__);
+    render_keyhint_horz_sep();
+
+    render_keyhint_keyRow(__BLANK__KEY__, PSTR(" VolDn"), PSTR(" Mute "));
+    render_keyhint_horz_sep();
+
+    render_keyhint_keyRow(__BLANK__KEY__, PSTR("  Up  "), __BLANK__KEY__);
+    render_keyhint_horz_sep();
+
+    render_keyhint_keyRow(PSTR(" Left "), PSTR(" Down "), PSTR(" Right"));
+
+
+    // oled_write_ln_P(PSTR(" Tappy| VolUp|      "), false);
+    // // oled_write_ln_P(PSTR("------+------+------"), false);
+    // render_keyhint_horz_sep();
+    // oled_write_ln_P(PSTR("      | VolDn| Mute "), false);
+    // // oled_write_ln_P(PSTR("------+------+------"), false);
+    // render_keyhint_horz_sep();
+    // oled_write_ln_P(PSTR("      |  Up  |      "), false);
+    // // oled_write_ln_P(PSTR("------+------+------"), false);
+    // render_keyhint_horz_sep();
+    // oled_write_ln_P(PSTR(" Left | Down | Right"), false);
+
+   
+}
+
+void render_keyhints_L_media(void){
+
+    render_layer_state();
+
+    render_keyhint_keyRow(PSTR(" Tappy"), PSTR(" VolUp"), BLANK_KEY);
+    render_keyhint_horz_sep();
+
+    render_keyhint_keyRow(BLANK_KEY,      PSTR(" VolDn"), PSTR(" Mute "));
+    render_keyhint_horz_sep();
+
+    render_keyhint_keyRow(BLANK_KEY,      PSTR(" Space"), BLANK_KEY);
+    render_keyhint_horz_sep();
+
+    render_keyhint_keyRow(PSTR("  <<  "), PSTR(" Play "), PSTR("  >>  "));
+}
+
+void render_keyhints_L_RGB(void){
+
+    render_layer_state();
+
+    render_keyhint_keyRow(PSTR(" Tappy"), PSTR(" Hue+ "), PSTR("Brght+"));
+    render_keyhint_horz_sep();
+
+    render_keyhint_keyRow(PSTR(" RGB  "),  PSTR(" Hue- "), PSTR("Brght-"));
+    render_keyhint_horz_sep();
+
+    render_keyhint_keyRow(__BLANK__KEY__, PSTR(" Sat+ "), __BLANK__KEY__);
+    render_keyhint_horz_sep();
+
+    render_keyhint_keyRow(PSTR(" Mode "), PSTR(" Sat- "), __BLANK__KEY__);
+}
+
+
+void oled_task_user(void) {
+    /* 21 character screen width. 7 lines high*/
+
+    switch (get_highest_layer(layer_state)) {
+        case _BASE:               
+            render_default_screen();
+            break;
+        case _FUNCTION:
+            render_keyhints_L_fn();
+            break;
+        case _MEDIA:
+            render_keyhints_L_media();
+            break;
+        case _RGB_LAYER:
+            render_keyhints_L_RGB();
+            break;
+        default:
+            render_default_screen();
+    }
     
-
-    // render_logo_thing();
-
-    // oled_write_P(PSTR(" "), false);
-    // oled_render_backlight_brightness();
-    // oled_render_timeout();
-
-
-    // oled_render_hid_timeout();
-
 }
 
 #endif  // -OLED_DRIVER_ENABLE
