@@ -25,6 +25,12 @@
 enum custom_keycodes {
     /*  Utility Macros  */
     CK_VRSN = SAFE_RANGE,  // Prints out QMK Version Info
+    CK_MAKE,  // Compiles the firmware, and adds the flash command based on keyboard bootloader
+
+    /*  Layer Macros  */
+    CK_QWERTY,
+    CK_WASD,
+    CK_MINE,
 
     /*  Switching Macros  */
     CK_SW_HIBIKI,          // Send Hibiki Switch CMD to PC
@@ -34,15 +40,24 @@ enum custom_keycodes {
     /*  Proxy Macros  */
     CK_PY_LUNA,
     CK_PY_FSHY,
+
     /*  Fun Macros  */
     CK_NYAA,
+
+    /*  Video Game Macros  */
+
+    // -- Mine Craft --
+    CK_MINECRAFT_AUTOPROXY,
 
     /*  Test Macros  */
     CK_TEST                // For random test stuff
 };
 
 enum layers {
+    // _BASE = 0,
     _QWERTY = 0,
+    _GAME_WASD,
+    _GAME_MCRAFT,
     _LOWER,
     _RAISE
 };

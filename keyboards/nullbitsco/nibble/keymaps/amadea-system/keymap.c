@@ -44,6 +44,7 @@ static uint16_t activity_ping_timer = 0;
 bool send_activity_ping = false;
 static uint16_t last_hid_transmition_time = 0;
 
+// OLED Vars
 uint32_t last_led_changed_time = 0;
 
 /* ----------- Function Defs --------- */
@@ -89,12 +90,13 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * |------||--------------------------------------------------------------------------------------------------|
  * |  F15 ||   Ctrl    |  Z  |  X  |  C  |  V  |  B  |  N  |  M  |  ,  |  .  |  /  |   R-Shift   | Up  |Pg Dn |
  * |------||--------------------------------------------------------------------------------------------------|
- * | XXXX ||Leader|  Gui  |  Alt  |    Space     | Lower |    Enter   |  Raise  |    GUI   | Lft | Dwn | Rht  |
+ * | XXXX ||Lower|  Gui  |  Alt  |    Space     | Leader |    Enter   |  Raise  |    GUI   | Lft | Dwn | Rht  |
  * `------'`--------------------------------------------------------------------------------------------------'
  */
   
   #define MO_LOWER MO(_LOWER)
   #define MO_RAISE MO(_RAISE)
+  #define HYPER_F19 KC_F19
   
   #ifndef LEADER_ENABLE
   #define KC_LEAD XXXXXXX
@@ -102,11 +104,60 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
 
   [_QWERTY] = LAYOUT_ansi_split_space(
-               KC_ESC,   KC_1,    KC_2,    KC_3,    KC_4,    KC_5,      KC_6,    KC_7,  KC_8,    KC_9,     KC_0,    KC_MINS, KC_EQL,  KC_TILD, KC_BSLS,
+               KC_ESC,   KC_1,    KC_2,    KC_3,    KC_4,    KC_5,      KC_6,    KC_7,  KC_8,    KC_9,     KC_0,    KC_MINS, KC_EQL,  KC_BSLS, KC_GRV,
     KC_MUTE,   KC_TAB,   KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,      KC_Y,    KC_U,  KC_I,    KC_O,     KC_P,    KC_LBRC, KC_RBRC, KC_BSPC, KC_DEL,
     CK_PY_LUNA,KC_LSFT,  KC_A,    KC_S,    KC_D,    KC_F,    KC_G,      KC_H,    KC_J,  KC_K,    KC_L,     KC_SCLN, KC_QUOT,          KC_ENT,  KC_PGUP,
     KC_F15,    KC_LCTL,  KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,      KC_N,    KC_M,  KC_COMM, KC_DOT,   KC_SLSH, KC_RSFT,          KC_UP,   KC_PGDN,
-    XXXXXXX,   KC_LEAD,  KC_LGUI, KC_LALT,          KC_SPC,  MO_LOWER,  KC_ENT,                  MO_RAISE, KC_RGUI,          KC_LEFT, KC_DOWN, KC_RGHT
+    HYPER_F19, KC_LALT, KC_LGUI,  MO_LOWER,         KC_SPC,  KC_LEAD,   KC_ENT,                  MO_RAISE, KC_RGUI,          KC_LEFT, KC_DOWN, KC_RGHT
+  ),
+
+
+/* Game-WASD - Default Layer 2  
+ *         ,--------------------------------------------------------------------------------------------------.
+ *         | Esc   |  1  |  2  |  3  |  4  |  5  |  6  |  7  |  8  |  9  |  0  |  -  |  =  |     ~     |  \   |
+ * ,------.|--------------------------------------------------------------------------------------------------|
+ * | F13  || Tab    |  Q  |  W  |  E  |  R  |  T  |  Y  |  U  |  I  |  O  |  P  |  [  |  ]  |  Bkspc   | Del  |
+ * |------||--------------------------------------------------------------------------------------------------|
+ * | F14  || Ctrl    |  A  |  S  |  D  |  F  |  G  |  H  |  J  |  K  |  L  |  ;  |  '  |    Enter      |Pg Up |
+ * |------||--------------------------------------------------------------------------------------------------|
+ * | F15  ||  L-Shift  |  Z  |  X  |  C  |  V  |  B  |  N  |  M  |  ,  |  .  |  /  |   R-Shift   | Up  |Pg Dn |
+ * |------||--------------------------------------------------------------------------------------------------|
+ * | F16  || Ctrl |  Gui  |  Alt  |    Space     | Lower |    Enter   |  Raise  |    GUI   | Lft | Dwn | Rht  |
+ * `------'`--------------------------------------------------------------------------------------------------'
+ */
+
+
+[_GAME_WASD] = LAYOUT_ansi_split_space(
+              KC_ESC,   KC_1,    KC_2,    KC_3,    KC_4,    KC_5,      KC_6,    KC_7,  KC_8,    KC_9,     KC_0,    KC_MINS, KC_EQL,  KC_BSLS, KC_GRV,
+    KC_F13,   KC_TAB,   KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,      KC_Y,    KC_U,  KC_I,    KC_O,     KC_P,    KC_LBRC, KC_RBRC, KC_BSPC, KC_DEL,
+    KC_F14,   KC_LCTL,  KC_A,    KC_S,    KC_D,    KC_F,    KC_G,      KC_H,    KC_J,  KC_K,    KC_L,     KC_SCLN, KC_QUOT,          KC_ENT,  KC_PGUP,
+    KC_F15,   KC_LSFT,  KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,      KC_N,    KC_M,  KC_COMM, KC_DOT,   KC_SLSH, KC_RSFT,          KC_UP,   KC_PGDN,
+    KC_F16,   KC_LCTL,  KC_LGUI, KC_LALT,          KC_SPC,  MO_LOWER,  KC_ENT,                  MO_RAISE, KC_RGUI,          KC_LEFT, KC_DOWN, KC_RGHT
+  ),
+
+
+/* Game-MCraft - Default Layer 2  
+ *         ,--------------------------------------------------------------------------------------------------.
+ *         | Esc   |  1  |  2  |  3  |  4  |  5  |  6  |  7  |  8  |  9  |  0  |  -  |  =  |     ~     |  \   |
+ * ,------.|--------------------------------------------------------------------------------------------------|
+ * | F13  || Tab    |  Q  |  W  |  E  |  R  |  T  |  Y  |  U  |  I  |  O  |  P  |  [  |  ]  |  Bkspc   | Del  |
+ * |------||--------------------------------------------------------------------------------------------------|
+ * | F14  || Ctrl    |  A  |  S  |  D  |  F  |  G  |  H  |  J  |  K  |  L  |  ;  |  '  |    Enter      |Pg Up |
+ * |------||--------------------------------------------------------------------------------------------------|
+ * | F15  ||  L-Shift  |  Z  |  X  |  C  |  V  |  B  |  N  |  M  |  ,  |  .  |  /  |   R-Shift   | Up  |Pg Dn |
+ * |------||--------------------------------------------------------------------------------------------------|
+ * | F16  ||Leader|  Gui  |  Alt  |    Space     | Lower |    Enter   |  Raise  |    GUI   | Lft | Dwn | Rht  |
+ * `------'`--------------------------------------------------------------------------------------------------'
+ */
+
+#define MC_PROXY CK_MINECRAFT_AUTOPROXY
+
+[_GAME_MCRAFT] = LAYOUT_ansi_split_space(
+              KC_ESC,   KC_1,    KC_2,    KC_3,    KC_4,    KC_5,      KC_6,    KC_7,  KC_8,    KC_9,     KC_0,    KC_MINS, KC_EQL,  KC_BSLS, KC_GRV,
+    KC_F13,   KC_TAB,   KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,      KC_Y,    KC_U,  KC_I,    KC_O,     KC_P,    KC_LBRC, KC_RBRC, KC_BSPC, KC_DEL,
+    MC_PROXY, KC_LSFT,  KC_A,    KC_S,    KC_D,    KC_F,    KC_G,      KC_H,    KC_J,  KC_K,    KC_L,     KC_SCLN, KC_QUOT,          KC_ENT,  KC_PGUP,
+    KC_F15,   KC_LCTL,  KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,      KC_N,    KC_M,  KC_COMM, KC_DOT,   KC_SLSH, KC_RSFT,          KC_UP,   KC_PGDN,
+    KC_F16,   KC_LEAD,  KC_LGUI, KC_LALT,          KC_SPC,  MO_LOWER,  KC_ENT,                  MO_RAISE, KC_RGUI,          KC_LEFT, KC_DOWN, KC_RGHT
   ),
 
 
@@ -115,23 +166,25 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  *         ,--------------------------------------------------------------------------------------------------.
  *         | -Esc  | F1  | F2  | F3  | F4  | F5  | F6  | F7  | F8  | F9  | F10 | F11 | F12 |   - ~     | -\   |
  * ,------.|--------------------------------------------------------------------------------------------------|
- * |RGB TG|| Tab    | -Q  | -W  | -E  | -R  | -T  | -Y  | -U  | -I  | -O  | -P  | -[  | -]  |  Delete  | Del  |
+ * |RGB TG|| Tab    | -Q  | Up  | -E  | -R  | -T  | -Y  | -U  | -I  | -O  | -P  | -[  | -]  |  Delete  | Del  |
  * |------||--------------------------------------------------------------------------------------------------|
- * |Prox L|| L-Shift | -A  | -S  | -D  | -F  | -G  | -H  | -J  | -K  | -L  | -;  | -'  |    Enter      | Home |
+ * |Prox L|| L-Shift | Lft | Dwn | Rht | -F  | -G  | -H  | -J  | -K  | -L  | -;  | -'  |    Enter      | Home |
  * |------||--------------------------------------------------------------------------------------------------|
  * |  F15 ||   Ctrl    |  Z  |  X  |  C  |  V  |  B  |  N  |  M  |  ,  |  .  |  /  |   R-Shift   |Pg Up| End  |
  * |------||--------------------------------------------------------------------------------------------------|
- * | XXXX ||Leader|  Gui  |  Alt  |    Space     | Lower |    Enter   |   Alt   |    GUI   | Lft |Pg Dn| Rht  |
+ * | XXXX ||Leader|  Gui  |  Alt  |    Space     | Lower |    Enter   |  Raise  |    GUI   | Lft |Pg Dn| Rht  |
  * `------'`--------------------------------------------------------------------------------------------------'
  */
 
+
   [_LOWER] = LAYOUT_ansi_split_space(  
               _______,  KC_F1,    KC_F2,    KC_F3,    KC_F4,      KC_F5,    KC_F6,    KC_F7,    KC_F8,    KC_F9,    KC_F10,   KC_F11,   KC_F12,   _______,  _______,
-    RGB_TOG,  _______,  _______,  _______,  _______,  CK_PY_LUNA, _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  KC_DEL,   _______,
-    _______,  _______,  _______,  _______,  _______,  CK_PY_FSHY, _______,  _______,  _______,  _______,  _______,  _______,  _______,            _______,  KC_HOME,
+    RGB_TOG,  _______,  KC_UP,    _______,  _______,  CK_PY_LUNA, _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  KC_DEL,   _______,
+    _______,  KC_LEFT,  KC_DOWN,  KC_RIGHT, _______,  CK_PY_FSHY, _______,  _______,  _______,  _______,  _______,  _______,  _______,            _______,  KC_HOME,
     _______,  _______,  _______,  _______,  _______,  _______,    _______,  _______,  _______,  _______,  _______,  _______,  _______,            KC_PGUP,  KC_END ,
     _______,  _______,  _______,  _______,            _______,    _______,  _______,                      _______,  _______,            _______,  KC_PGDN,  _______
   ),
+
 
 
 /* Raise - Mostly used as a Macro layer and for infequently used symbols.
@@ -139,28 +192,34 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  *         ,--------------------------------------------------------------------------------------------------.
  *         | Reset | F1  | F2  | F3  | F4  | F5  | F6  | F7  | F8  | F9  | F10 | F11 | F12 |     ~     |  \   |
  * ,------.|--------------------------------------------------------------------------------------------------|
- * | Mute || Tab    | -Q  | -W  | -E  | -R  | -T  | -Y  | -U  | -I  | -O  | -P  | -[  | -]  |  Delete  | Del  |
+ * | Mute || Tab    |QWERT|GWASD| -E  | -R  | -T  | -Y  | -U  | -I  | -O  | -P  | -[  | -]  |  Delete  | Del  |
  * |------||--------------------------------------------------------------------------------------------------|
  * |Sw Lun|| L-Shift | -A  | -S  | -D  | -F  | -G  | -H  | -J  | -K  | -L  | -;  | -'  |    Enter      | Home |
  * |------||--------------------------------------------------------------------------------------------------|
- * |Sw Hib||   Ctrl    |  Z  |  X  |  C  |  V  |W BAK|Nyaa |  M  |  ,  |  .  |  /  |   R-Shift   |GUI U| End  |
+ * | xxxx ||   Ctrl    |  Z  |  X  |  C  |  V  |W BAK|Nyaa |  M  |  ,  |  .  |  /  |   R-Shift   |GUI U| End  |
  * |------||--------------------------------------------------------------------------------------------------|
- * | XXXX || XXXX |  Gui  |  Alt  |    Space     | Lower |    Enter   |   Alt   |    GUI   |GUI L|GUI D| GUI R|
+ * |Sw Hib||Leader|  Gui  |  Alt  |    Space     | Lower |    Enter   |  Raise  |    GUI   |GUI L|GUI D| GUI R|
  * `------'`--------------------------------------------------------------------------------------------------'
  */
   
+
   #define GUI_LEFT LGUI(KC_LEFT)
   #define GUI_RIGHT LGUI(KC_RIGHT)
   #define GUI_UP LGUI(KC_UP)
   #define GUI_DOWN LGUI(KC_DOWN)
 
+  #define TOG_QWERT CK_QWERTY //DF(_QWERTY)
+  #define TOG_WASD  CK_WASD   //DF(_GAME_WASD)
+  #define TOG_MINE  CK_MINE   //DF(_GAME_MCRAFT)
+ 
+
   [_RAISE] = LAYOUT_ansi_split_space(  
-                  RESET,    KC_F1,    KC_F2,    KC_F3,    KC_F4,    KC_F5,    KC_F6,    KC_F7,    KC_F8,    KC_F9,    KC_F10,   KC_F11,   KC_F12,   _______,  CK_VRSN,
-    RGB_TOG,      _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  KC_DEL,   _______,
-    CK_SW_HIBIKI, _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,            _______,  KC_HOME,
-    CK_SW_LUNA,   _______,  _______,  _______,  _______,  _______,  KC_WBAK,  CK_NYAA,  _______,  _______,  _______,  _______,  _______,            GUI_UP,   KC_END ,
-    _______,      _______,  _______,  _______,            _______,  _______,  _______,                      _______,  _______,            GUI_LEFT, GUI_DOWN, GUI_RIGHT
-  ),
+                  RESET,    KC_F1,      KC_F2,     KC_F3,    KC_F4,    KC_F5,    KC_F6,    KC_F7,    KC_F8,    KC_F9,    KC_F10,   KC_F11,   KC_F12,   _______,  CK_VRSN,
+    GUI_UP,       _______,  TOG_QWERT,  TOG_WASD,  TOG_MINE, _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  KC_DEL,   _______,
+    CK_SW_LUNA,   _______,  _______,    _______,   _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,            _______,  KC_HOME,
+    _______,      _______,  _______,    _______,   _______,  _______,  KC_WBAK,  CK_NYAA,  CK_MAKE,  _______,  _______,  _______,  _______,            GUI_UP,   KC_END ,
+    CK_SW_HIBIKI, _______,  _______,    _______,             _______,  _______,  _______,                      _______,  _______,            GUI_LEFT, GUI_DOWN, GUI_RIGHT
+  ), 
 
 };
 
@@ -223,8 +282,16 @@ void encoder_change_RGB(bool clockwise) {
 
 void encoder_update_kb(uint8_t index, bool clockwise) {
     if (layer_state_is(_LOWER)) {
-      //change RGB settings
+        //change RGB settings
         encoder_change_RGB(clockwise);
+
+    }else if (layer_state_is(_RAISE)){
+        if (clockwise) {
+            tap_code16(LGUI(KC_RIGHT)); // Right
+        }else{
+            tap_code16(LGUI(KC_LEFT));  // Left
+        }
+    
     }else{
         if (clockwise) {
             tap_code(KC_VOLU);
@@ -252,7 +319,7 @@ void set_rgblight_current_fronter(uint8_t fronter){
             break;
         case MEM_LUNA:
             // rgblight_sethsv_noeeprom(HSV_BLUE);
-            rgblight_sethsv_noeeprom(94, 255, 255);  // Pink
+            rgblight_sethsv_noeeprom(240, 255, 255);  // Pink
             break;
         default:
             rgblight_sethsv_noeeprom(HSV_RED);
@@ -412,6 +479,40 @@ oled_rotation_t oled_init_user(oled_rotation_t rotation) { return OLED_ROTATION_
 //     return false;
 // }
 
+void render_debug_layer_mask(void){
+
+    // oled_write_P(PSTR("    "), false);
+    // This section: 146 Bytes
+    char layer_bin_num[32] = {0};
+    itoa(layer_state, layer_bin_num,2);  // 90 bytes
+    strrev(layer_bin_num);  // 6 bytes
+
+    // 42 Bytes
+    for (int8_t i = 0; i < 10; i++)
+    {
+            if (layer_bin_num[i] == '0' || layer_bin_num[i] == '1'){
+                oled_write_char(layer_bin_num[i], false);
+            }else{
+                oled_write_char('-', false);
+            }
+    } 
+
+    oled_write_P(PSTR(" "), false);
+
+    char def_layer_bin_num[32] = {0};
+    itoa(default_layer_state, def_layer_bin_num,2);  // 90 bytes
+    strrev(layer_bin_num);  // 6 bytes
+
+    // 42 Bytes
+    for (int8_t i = 0; i < 10; i++)
+    {
+            if (def_layer_bin_num[i] == '0' || def_layer_bin_num[i] == '1'){
+                oled_write_char(def_layer_bin_num[i], false);
+            }else{
+                oled_write_char('-', false);
+            }
+    } 
+}
 
 void oled_task_user(void) {
 
@@ -422,8 +523,10 @@ void oled_task_user(void) {
     render_layer_and_fronter(); // full line
 
     // Blank line
-    oled_write_ln_P(PSTR(" "), false);
+    oled_write_ln_P(PSTR(""), false);
     oled_write_P(PSTR("    Amadea System    "), false);
+
+    // render_debug_layer_mask();
     render_rgb_state();
 
     // oled_write_ln_P(PSTR("5"), false);

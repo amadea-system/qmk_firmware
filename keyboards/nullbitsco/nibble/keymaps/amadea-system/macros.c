@@ -29,16 +29,70 @@
 #include "nibble65_keymap.h"
 
 void raw_hid_send_command(uint8_t command_id, uint8_t *data, uint8_t length);
+void set_rgblight_current_fronter(uint8_t current_fronter);
+extern uint8_t current_fronter;
+
+#define TAP_CODE_DELAY_M 5  
 
 bool process_macros(uint16_t keycode, keyrecord_t *record){
 
     uint8_t new_fronter;  // placeholder 
+
     switch(keycode) {
         case CK_VRSN:  // Prints out QMK Version Info
             if (record->event.pressed) {
                 SEND_STRING(QMK_KEYBOARD "/" QMK_KEYMAP " @ " QMK_VERSION "\nCompiled On " QMK_BUILDDATE "\n");
             }
             break;
+        case CK_TEST:
+            if (record->event.pressed) {
+                SEND_STRING("Test1S");
+            }
+            break;            
+
+        case CK_MAKE:  // Compiles the firmware, and adds the flash command based on keyboard bootloader
+            if (!record->event.pressed) {
+                uint8_t temp_mod = mod_config(get_mods());
+                uint8_t temp_osm = mod_config(get_oneshot_mods());
+                clear_mods();
+                clear_oneshot_mods();
+
+                send_string_with_delay_P(PSTR("cp_fw && qmk"), TAP_CODE_DELAY_M);
+                if ((temp_mod | temp_osm) & MOD_MASK_SHIFT){
+                    send_string_with_delay_P(PSTR(" flash "), TAP_CODE_DELAY_M);
+                } else {
+                    send_string_with_delay_P(PSTR(" compile "), TAP_CODE_DELAY_M);
+                }
+                send_string_with_delay_P(PSTR("-kb " QMK_KEYBOARD " -km " QMK_KEYMAP), TAP_CODE_DELAY_M);
+                send_string_with_delay_P(PSTR(SS_TAP(X_ENTER)), TAP_CODE_DELAY_M);
+
+                if ((temp_mod | temp_osm) & MOD_MASK_SHIFT){
+
+                }
+
+                break;
+            }
+
+// ---- Layer Macros ---- //
+        if (record->event.pressed) {
+            case CK_QWERTY:
+                rgblight_reload_from_eeprom();
+                set_rgblight_current_fronter(current_fronter);
+                default_layer_set(1U << _QWERTY);
+                // set_single_persistent_default_layer(_QWERTY);
+                break;
+            case CK_WASD:
+                rgblight_mode_noeeprom(RGBLIGHT_MODE_RAINBOW_MOOD);
+                default_layer_set(1U << _GAME_WASD);
+                // set_single_persistent_default_layer(_GAME_WASD);
+                break;
+            case CK_MINE:
+                rgblight_mode_noeeprom(RGBLIGHT_MODE_RAINBOW_MOOD);
+                default_layer_set(1U << _GAME_MCRAFT);
+                // set_single_persistent_default_layer(_GAME_MCRAFT);
+                break;
+        }
+
 
 // ---- Switching Macros ---- //
         case CK_SW_HIBIKI:
@@ -74,6 +128,20 @@ bool process_macros(uint16_t keycode, keyrecord_t *record){
                 SEND_STRING("/f ");
             }
             break;
+
+// ---- Video Games ---- /
+        case CK_MINECRAFT_AUTOPROXY:
+            if(record->event.pressed){
+                SEND_STRING("t" SS_DELAY(250));
+                if(current_fronter == MEM_LUNA){
+                    SEND_STRING("<Luna> "); 
+                }else if (current_fronter == MEM_HIBIKI){
+                    SEND_STRING("<Hibiki> "); 
+                }else if (current_fronter == MEM_FLUTTERSHY){
+                    SEND_STRING("<Fluttershy> "); 
+                }
+            }
+
 
         // case RM_4: //remote macro 4
         //   if (record->event.pressed) {

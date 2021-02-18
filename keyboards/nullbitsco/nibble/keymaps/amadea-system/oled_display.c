@@ -30,30 +30,56 @@ extern uint32_t last_led_changed_time;
 
 /* ------------ Function Defs ----------- */
 
+void write_spaces(uint8_t num_of_spaces){
+    for (uint8_t i = 0; i < num_of_spaces; i++)
+    {
+        // oled_write_P(PSTR(" "), false);
+        oled_write_char(' ', false);
+    }
+}
+
 void render_top_header(void){
     oled_write_P(PSTR("_Layer_"), false);    // 7 Chars
     oled_write_P(PSTR("     "), false);      // 5 Chars
     oled_write_P(PSTR("_Fronter_"), false);  // 9 Chars
 }
 
-
-void render_layer_state(void) {
+#define _BASE 0
+int render_layer_state(void) {
     /* 6 char long */
-
+    uint8_t layer_name_length;
     // Layer name must be 6 characters long.
     switch (get_highest_layer(layer_state)) {
-        case _QWERTY:               
-            oled_write_P(PSTR("QWERTY"), false);
+        case _BASE:
+            switch (get_highest_layer(default_layer_state)) {
+                case _QWERTY:               
+                    oled_write_P(PSTR("QWERTY"), false);
+                    layer_name_length = 6;
+                    break;
+                case _GAME_WASD:               
+                    oled_write_P(PSTR("GAME - WASD"), true);
+                    layer_name_length = 11;
+                    break;
+                case _GAME_MCRAFT:               
+                    oled_write_P(PSTR("MineCraft"), true);
+                    layer_name_length = 9;
+                    break;
+            }
             break;
+
         case _LOWER:
-            oled_write_P(PSTR("Lower "), false);
+            oled_write_P(PSTR("Lower"), false);
+            layer_name_length = 5;
             break;
         case _RAISE:
             oled_write_P(PSTR("Macros"), false);
+            layer_name_length = 6;
             break;
         default:
-            oled_write_P(PSTR("Undef "), false);
+            oled_write_P(PSTR("Undef"), false);
+            layer_name_length = 5;
     }
+    return layer_name_length;
 }
 
 void render_current_fronter(void){
@@ -82,10 +108,15 @@ void render_current_fronter(void){
     }
 }
 
+
+
 void render_layer_and_fronter(void){
 
-    render_layer_state();     // 6 char
-    oled_write_P(PSTR("        "), false);      // 8 Chars
+    uint8_t length = render_layer_state();     // 6 char
+    length = 21 - length - 7;
+    write_spaces(length);
+    
+    // oled_write_P(PSTR("        "), false);      // 8 Chars
     render_current_fronter(); // 7 char
 
 }
@@ -103,6 +134,7 @@ void render_layer_and_fronter(void){
 
 
 extern rgblight_config_t rgblight_config;
+
 void render_rgb_state(void) {
     #ifdef RGBLIGHT_ENABLE
     
@@ -110,7 +142,7 @@ void render_rgb_state(void) {
     if (timer_elapsed32(last_led_changed_time) > 15000) {
         // Only show the RGB Info for a short time after changing it.
         oled_write_ln_P(PSTR(""), false);
-        return;
+        return;// false;
     }
     char rgb_info_str[22];
 
@@ -128,5 +160,58 @@ void render_rgb_state(void) {
              (uint8_t)((rgblight_config.val*100)/255));
 
     oled_write(rgb_info_str, false);
+    return;// true;
     #endif // RGBLIGHT_ENABLE
 }
+
+/***** rgblight_mode(mode)/rgblight_mode_noeeprom(mode) ****
+
+ old mode number (before 0.6.117) to new mode name table
+
+|-----------------|-----------------------------------|
+| old mode number | new mode name                     |
+|-----------------|-----------------------------------|
+|        1        | RGBLIGHT_MODE_STATIC_LIGHT        |
+|        2        | RGBLIGHT_MODE_BREATHING           |
+|        3        | RGBLIGHT_MODE_BREATHING + 1       |
+|        4        | RGBLIGHT_MODE_BREATHING + 2       |
+|        5        | RGBLIGHT_MODE_BREATHING + 3       |
+|        6        | RGBLIGHT_MODE_RAINBOW_MOOD        |
+|        7        | RGBLIGHT_MODE_RAINBOW_MOOD + 1    |
+|        8        | RGBLIGHT_MODE_RAINBOW_MOOD + 2    |
+|        9        | RGBLIGHT_MODE_RAINBOW_SWIRL       |
+|       10        | RGBLIGHT_MODE_RAINBOW_SWIRL + 1   |
+|       11        | RGBLIGHT_MODE_RAINBOW_SWIRL + 2   |
+|       12        | RGBLIGHT_MODE_RAINBOW_SWIRL + 3   |
+|       13        | RGBLIGHT_MODE_RAINBOW_SWIRL + 4   |
+|       14        | RGBLIGHT_MODE_RAINBOW_SWIRL + 5   |
+|       15        | RGBLIGHT_MODE_SNAKE               |
+|       16        | RGBLIGHT_MODE_SNAKE + 1           |
+|       17        | RGBLIGHT_MODE_SNAKE + 2           |
+|       18        | RGBLIGHT_MODE_SNAKE + 3           |
+|       19        | RGBLIGHT_MODE_SNAKE + 4           |
+|       20        | RGBLIGHT_MODE_SNAKE + 5           |
+|       21        | RGBLIGHT_MODE_KNIGHT              |
+|       22        | RGBLIGHT_MODE_KNIGHT + 1          |
+|       23        | RGBLIGHT_MODE_KNIGHT + 2          |
+|       24        | RGBLIGHT_MODE_CHRISTMAS           |
+|       25        | RGBLIGHT_MODE_STATIC_GRADIENT     |
+|       26        | RGBLIGHT_MODE_STATIC_GRADIENT + 1 |
+|       27        | RGBLIGHT_MODE_STATIC_GRADIENT + 2 |
+|       28        | RGBLIGHT_MODE_STATIC_GRADIENT + 3 |
+|       29        | RGBLIGHT_MODE_STATIC_GRADIENT + 4 |
+|       30        | RGBLIGHT_MODE_STATIC_GRADIENT + 5 |
+|       31        | RGBLIGHT_MODE_STATIC_GRADIENT + 6 |
+|       32        | RGBLIGHT_MODE_STATIC_GRADIENT + 7 |
+|       33        | RGBLIGHT_MODE_STATIC_GRADIENT + 8 |
+|       34        | RGBLIGHT_MODE_STATIC_GRADIENT + 9 |
+|       35        | RGBLIGHT_MODE_RGB_TEST            |
+|       36        | RGBLIGHT_MODE_ALTERNATING         |
+|       37        | RGBLIGHT_MODE_TWINKLE             |
+|       38        | RGBLIGHT_MODE_TWINKLE + 1         |
+|       39        | RGBLIGHT_MODE_TWINKLE + 2         |
+|       40        | RGBLIGHT_MODE_TWINKLE + 3         |
+|       41        | RGBLIGHT_MODE_TWINKLE + 4         |
+|       42        | RGBLIGHT_MODE_TWINKLE + 5         |
+|-----------------|-----------------------------------|
+ *****/
