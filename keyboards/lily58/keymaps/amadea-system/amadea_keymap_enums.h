@@ -30,10 +30,17 @@ enum layer_number {
 
 
 enum custom_keycodes {
+
+    /*  Utility Macros  */
     VRSN = SAFE_RANGE,  // Prints out QMK Version Info
+    CK_MAKE,  // Compiles the firmware, and adds the flash command based on keyboard bootloader
+
+    /*  Switching Macros  */
     SW_HIBIKI,          // Send Hibiki Switch CMD to PC
     SW_LUNA,            // Send Luna  Switch CMD to PC
     CK_SW_TEST,         // Cycle through fronters internally to test code
+
+    /*  Test Macros  */
     CK_TEST             // For random test stuff
 };
 

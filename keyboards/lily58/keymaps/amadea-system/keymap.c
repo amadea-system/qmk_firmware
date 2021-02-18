@@ -141,7 +141,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * ,-----------------------------------------.                    ,-----------------------------------------.
  * |  F12 |  F1  |  F2  |  F3  |  F4  |  F5  |                    |  F6  |  F7  |  F8  |  F9  | F10  | F11  |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
- * |      |      |Pg Up |  Up  |Pg Dwn|   {  |                    |      |   }  |      |      |      |   =  |
+ * |      |      |Pg Up |  Up  |Pg Dwn|   {  |                    |YeetFW|   }  |      |      |      |   =  |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
  * |      |   !  | Left | Down |Right |   %  |-------.    ,-------|   ^  |   &  |   *  |      |   |  |      |
  * |------+------+------+------+------+------|   [   |    |    ]yr  |------+------+------+------+------+------|
@@ -164,7 +164,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
 [_LOWER] = LAYOUT( \
   KC_F12,  KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5,                     KC_F6,   KC_F7,   KC_F8,       KC_F9,       KC_F10,  KC_F11,  \
-  KC_NO,   KC_NO,   KC_PGUP, KC_UP,   KC_PGDN, KC_PGUP,                   KC_NO,   KC_RCBR, KC_NO,       KC_NO,       KC_NO,   KC_EQL,  \
+  KC_NO,   KC_NO,   KC_PGUP, KC_UP,   KC_PGDN, KC_PGUP,                   CK_MAKE, KC_RCBR, KC_NO,       KC_NO,       KC_NO,   KC_EQL,  \
   _______, KC_EXLM, KC_LEFT, KC_DOWN, KC_RGHT, KC_PGDN,                   KC_CIRC, KC_AMPR, KC_ASTR,     KC_NO,       KC_PIPE, KC_NO,   \
   _______, _______, _______, _______, _______, _______, KC_RBRC, _______, XXXXXXX, KC_UNDS, TD(TD_LBRK), TD(TD_RBRK), KC_BSLS, _______, \
                              _______, _______, _______, _______, _______,  _______, _______, _______\
@@ -263,7 +263,7 @@ XXXXXXX, XXXXXXX, XXXXXXX,  XXXXXXX,  XXXXXXX, XXXXXXX, _______, _______, XXXXXX
 
 [_ADJUST] = LAYOUT( \
 VRSN,    XXXXXXX, TOG_WASD, TOG_ESDF, XXXXXXX, CK_SW_TEST,              SW_HIBIKI, SW_LUNA, XXXXXXX, XXXXXXX, XXXXXXX, RESET,   \
-XXXXXXX, XXXXXXX, XXXXXXX,  XXXXXXX,  XXXXXXX, CK_TEST,                   XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, \
+XXXXXXX, XXXXXXX, XXXXXXX,  XXXXXXX,  XXXXXXX, CK_TEST,                   XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, CK_MAKE, \
 XXXXXXX, XXXXXXX, XXXXXXX,  XXXXXXX,  XXXXXXX, XXXXXXX,                   XXXXXXX, XXXXXXX, RGB_TOG, RGB_HUI, RGB_SAI, RGB_VAI, \
 XXXXXXX, XXXXXXX, XXXXXXX,  XXXXXXX,  XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, RGB_MOD, RGB_HUD, RGB_SAD, RGB_VAD, \
                             _______,  _______, _______, _______, _______,  _______, _______, _______ \
@@ -635,6 +635,26 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 SEND_STRING(QMK_KEYBOARD "/" QMK_KEYMAP " @ " QMK_VERSION "\nCompiled On " QMK_BUILDDATE "\n");
                 // return false;
                 break;
+            
+            case CK_MAKE:
+                {
+                    uint8_t temp_mod = mod_config(get_mods());
+                    uint8_t temp_osm = mod_config(get_oneshot_mods());
+                    clear_mods();
+                    clear_oneshot_mods();
+
+                    send_string_with_delay_P(PSTR("cp_fw && qmk"), 5);
+                    if ((temp_mod | temp_osm) & MOD_MASK_SHIFT){
+                        send_string_with_delay_P(PSTR(" flash "), 5);
+                    } else {
+                        send_string_with_delay_P(PSTR(" compile "), 5);
+                    }
+                    send_string_with_delay_P(PSTR("-kb " QMK_KEYBOARD " -km " QMK_KEYMAP), 5);
+                    send_string_with_delay_P(PSTR(SS_TAP(X_ENTER)), 5);
+
+                    break;
+                }
+
             case SW_HIBIKI:
                 new_fronter = MEM_HIBIKI;
                 raw_hid_send_command(CMD_PC_SWITCH_FRONTER, &new_fronter, 1);
