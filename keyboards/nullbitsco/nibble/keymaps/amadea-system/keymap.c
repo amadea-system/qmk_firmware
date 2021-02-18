@@ -280,7 +280,7 @@ void encoder_change_RGB(bool clockwise) {
     last_led_changed_time = timer_read32(); 
 }
 
-void encoder_update_kb(uint8_t index, bool clockwise) {
+void encoder_update_user(uint8_t index, bool clockwise) {
     if (layer_state_is(_LOWER)) {
         //change RGB settings
         encoder_change_RGB(clockwise);
