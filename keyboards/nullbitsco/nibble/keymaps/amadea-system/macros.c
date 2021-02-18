@@ -51,6 +51,7 @@ bool process_macros(uint16_t keycode, keyrecord_t *record){
             break;            
 
         case CK_MAKE:  // Compiles the firmware, and adds the flash command based on keyboard bootloader
+        {
             if (!record->event.pressed) {
                 uint8_t temp_mod = mod_config(get_mods());
                 uint8_t temp_osm = mod_config(get_oneshot_mods());
@@ -69,9 +70,9 @@ bool process_macros(uint16_t keycode, keyrecord_t *record){
                 if ((temp_mod | temp_osm) & MOD_MASK_SHIFT){
 
                 }
-
-                break;
             }
+            break;
+    }
 
 // ---- Layer Macros ---- //
         if (record->event.pressed) {
