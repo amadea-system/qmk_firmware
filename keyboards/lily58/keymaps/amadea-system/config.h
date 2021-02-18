@@ -58,12 +58,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define RGBLIGHT_LED_MAP { 5, 4, 3, 2, 1, 0, 6, 7, 8, 9, 10}
 
 #define RGBLIGHT_SPLIT 
-#undef RGBLIGHT_ANIMATIONS
 #define RGBLIGHT_LIMIT_VAL 200 //120
 #define RGBLIGHT_HUE_STEP 10
 #define RGBLIGHT_SAT_STEP 17
 #define RGBLIGHT_VAL_STEP 17
 
+// - RGB Animation Settings -
+#undef RGBLIGHT_ANIMATIONS
+#define RGBLIGHT_EFFECT_BREATHING  // 930 Bytes
+// #define RGBLIGHT_EFFECT_BREATHE_CENTER 1.0  // 1558 Bytes
 
 // -- NKRO Config --
 #undef FORCE_NKRO  // Had to undef, then redefine to actually get it to activate.
