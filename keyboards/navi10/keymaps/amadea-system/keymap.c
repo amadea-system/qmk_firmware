@@ -39,7 +39,7 @@
 /* ------------ # Defines ------------ */
 
 #define DEFAULT_ARGB_COLOR HSV_SPRINGGREEN  // Default Backlight Color, Used for the Base Layer
-#define MEM_SWITCH_OUT_COLOR HSV_BLUE       // The Backlight color to indicate "No one in front". Defined here becuase it is used in several places.
+#define MEM_SWITCH_OUT_COLOR HSV_WHITE       // The Backlight color to indicate "No one in front". Defined here becuase it is used in several places.
 
 // - Pin Defs -
 #define TX_LED   D5
@@ -893,7 +893,8 @@ void render_layer_state(void) {
     }else{
         // oled_set_cursor(16, 0);
         // oled_write_P(PSTR("                "), false);
-        oled_write_P(PSTR("----------------"), false);
+        // oled_write_P(PSTR("----------------"), false);
+        // oled_write_P(PSTR("- - - - - - - - "), false);
     }
 
     switch (get_highest_layer(layer_state)) {
@@ -901,16 +902,16 @@ void render_layer_state(void) {
             oled_write_ln_P(PSTR("TKL  "), false);
             break;
         case _FUNCTION:
-            oled_write_P(PSTR(" Func"), false);
+            oled_write_P(PSTR("         Fun         "), false);
             break;
         case _MEDIA:
-            oled_write_P(PSTR("Media"), false);
+            oled_write_P(PSTR("        Media        "), false);
             break;
         case _RGB_LAYER:
-            oled_write_P(PSTR("  RGB"), false);
+            oled_write_P(PSTR("         RGB         "), false);
             break;
         default:
-            oled_write_P(PSTR("Undef"), false);
+            oled_write_P(PSTR("        Undef        "), false);
     }
 
     // oled_write_ln_P(PSTR(""), false);
@@ -965,7 +966,8 @@ void render_default_screen(void){
 }
 
 void render_keyhint_horz_sep(void){
-    oled_write_ln_P(PSTR("------+------+------"), false);
+    // oled_write_ln_P(PSTR("------+------+------"), false);
+    oled_write_ln_P(PSTR("- - - + -  - + - - -"), false);
 }
 
 // void render_keyhint_key(const char *key_text, bool last_key_in_row){
@@ -995,14 +997,19 @@ void render_keyhints_L_fn(void){
 
     render_layer_state();
 
+    oled_write_ln_P(PSTR(""), false);
+    oled_write_ln_P(PSTR(""), false);
+    
+
     render_keyhint_keyRow(PSTR(" Tappy"), PSTR(" VolUp"), __BLANK__KEY__);
-    render_keyhint_horz_sep();
+    // render_keyhint_horz_sep();
 
     render_keyhint_keyRow(__BLANK__KEY__, PSTR(" VolDn"), PSTR(" Mute "));
-    render_keyhint_horz_sep();
+    // render_keyhint_horz_sep();
+    oled_write_ln_P(PSTR(""), false);
 
     render_keyhint_keyRow(__BLANK__KEY__, PSTR("  Up  "), __BLANK__KEY__);
-    render_keyhint_horz_sep();
+    // render_keyhint_horz_sep();
 
     render_keyhint_keyRow(PSTR(" Left "), PSTR(" Down "), PSTR(" Right"));
 
@@ -1024,15 +1031,17 @@ void render_keyhints_L_fn(void){
 void render_keyhints_L_media(void){
 
     render_layer_state();
+    oled_write_ln_P(PSTR(""), false);
+    oled_write_ln_P(PSTR(""), false);
 
     render_keyhint_keyRow(PSTR(" Tappy"), PSTR(" VolUp"), BLANK_KEY);
-    render_keyhint_horz_sep();
+    // render_keyhint_horz_sep();
 
     render_keyhint_keyRow(BLANK_KEY,      PSTR(" VolDn"), PSTR(" Mute "));
-    render_keyhint_horz_sep();
-
+    // render_keyhint_horz_sep();
+    oled_write_ln_P(PSTR(""), false);
     render_keyhint_keyRow(BLANK_KEY,      PSTR(" Space"), BLANK_KEY);
-    render_keyhint_horz_sep();
+    // render_keyhint_horz_sep();
 
     render_keyhint_keyRow(PSTR("  <<  "), PSTR(" Play "), PSTR("  >>  "));
 }
@@ -1040,15 +1049,18 @@ void render_keyhints_L_media(void){
 void render_keyhints_L_RGB(void){
 
     render_layer_state();
+    oled_write_ln_P(PSTR(""), false);
+    oled_write_ln_P(PSTR(""), false);
 
     render_keyhint_keyRow(PSTR(" Tappy"), PSTR(" Hue+ "), PSTR("Brght+"));
-    render_keyhint_horz_sep();
+    // render_keyhint_horz_sep();
 
     render_keyhint_keyRow(PSTR(" RGB  "),  PSTR(" Hue- "), PSTR("Brght-"));
-    render_keyhint_horz_sep();
+    // render_keyhint_horz_sep();
+    oled_write_ln_P(PSTR(""), false);
 
     render_keyhint_keyRow(__BLANK__KEY__, PSTR(" Sat+ "), __BLANK__KEY__);
-    render_keyhint_horz_sep();
+    // render_keyhint_horz_sep();
 
     render_keyhint_keyRow(PSTR(" Mode "), PSTR(" Sat- "), __BLANK__KEY__);
 }
