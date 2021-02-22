@@ -18,7 +18,8 @@
 #include "nibble65_keymap.h"
 
 #include "version.h"  // For the Version Macro
-#include "raw_hid.h"
+
+#include "amadea_hid_commands.h"
 #include "macros.c"
 
 #ifdef LEADER_ENABLE
@@ -26,34 +27,22 @@
 #endif
 
 
-
-/* ------------ # Defines ------------ */
-
-// - HID -
-#define HID_DISCONECTION_TIMEOUT 5000  // milliseconds 
-
-
 /* --------- Local Variables --------- */
 
-// HID Vars
-uint8_t current_fronter = MEM_SWITCHED_OUT;
-bool hid_connected = false; // Flag indicating if we have a PC connection yet
-static uint16_t hid_disconection_timer = 0;
-static uint16_t activity_ping_timer = 0;
-
-bool send_activity_ping = false;
-static uint16_t last_hid_transmition_time = 0;
-
 // OLED Vars
-uint32_t last_led_changed_time = 0;
+uint32_t last_led_changed_time = 10000;
+uint16_t volume_changed_timer = 10000;
+ 
+uint8_t current_fronter = MEM_SWITCHED_OUT;
 
-/* ----------- Function Defs --------- */
+uint8_t last_volume_set_point = 0;  // 255 is muted.
+uint8_t last_volume_target = 0;
+char last_volume_app_name[OLED_CHAR_WIDTH+1] = {}; //{"\n"};
 
-// - HID Funcs - 
-void send_hid_debug(uint8_t *data);
-void raw_hid_send_command(uint8_t command_id, uint8_t *data, uint8_t length);
-bool check_hid_timeout(void);
-void hid_send_activity_ping(void);
+
+/* ---------- External Vars ---------- */
+
+/* ---------- Function Defs ---------- */
 
 /* ------ External Function Def ------ */
 
@@ -62,10 +51,8 @@ void render_top_header(void);
 void render_layer_state(void);
 void render_current_fronter(void);
 void render_layer_and_fronter(void);
+bool render_volume_display(const char *target_name, int8_t volume_pct);
 void render_rgb_state(void);
-
-
-// -- amadea_hid.c --
 
 
 
@@ -102,10 +89,10 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   #define KC_LEAD XXXXXXX
   #endif
 
-
+// KC_MUTE
   [_QWERTY] = LAYOUT_ansi_split_space(
                KC_ESC,   KC_1,    KC_2,    KC_3,    KC_4,    KC_5,      KC_6,    KC_7,  KC_8,    KC_9,     KC_0,    KC_MINS, KC_EQL,  KC_BSLS, KC_GRV,
-    KC_MUTE,   KC_TAB,   KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,      KC_Y,    KC_U,  KC_I,    KC_O,     KC_P,    KC_LBRC, KC_RBRC, KC_BSPC, KC_DEL,
+CK_VOL_MUTE,   KC_TAB,   KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,      KC_Y,    KC_U,  KC_I,    KC_O,     KC_P,    KC_LBRC, KC_RBRC, KC_BSPC, KC_DEL,
     CK_PY_LUNA,KC_LSFT,  KC_A,    KC_S,    KC_D,    KC_F,    KC_G,      KC_H,    KC_J,  KC_K,    KC_L,     KC_SCLN, KC_QUOT,          KC_ENT,  KC_PGUP,
     KC_F15,    KC_LCTL,  KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,      KC_N,    KC_M,  KC_COMM, KC_DOT,   KC_SLSH, KC_RSFT,          KC_UP,   KC_PGDN,
     HYPER_F19, KC_LALT, KC_LGUI,  MO_LOWER,         KC_SPC,  KC_LEAD,   KC_ENT,                  MO_RAISE, KC_RGUI,          KC_LEFT, KC_DOWN, KC_RGHT
@@ -179,8 +166,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
   [_LOWER] = LAYOUT_ansi_split_space(  
               _______,  KC_F1,    KC_F2,    KC_F3,    KC_F4,      KC_F5,    KC_F6,    KC_F7,    KC_F8,    KC_F9,    KC_F10,   KC_F11,   KC_F12,   _______,  _______,
-    RGB_TOG,  _______,  KC_UP,    _______,  _______,  CK_PY_LUNA, _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  KC_DEL,   _______,
-    _______,  KC_LEFT,  KC_DOWN,  KC_RIGHT, _______,  CK_PY_FSHY, _______,  _______,  _______,  _______,  _______,  _______,  _______,            _______,  KC_HOME,
+    RGB_TOG,  _______,  _______,  KC_UP,    _______,  CK_PY_LUNA, _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  KC_DEL,   _______,
+    _______,  _______,  KC_LEFT,  KC_DOWN, KC_RIGHT,  CK_PY_FSHY, _______,  _______,  _______,  _______,  _______,  _______,  _______,            _______,  KC_HOME,
     _______,  _______,  _______,  _______,  _______,  _______,    _______,  _______,  _______,  _______,  _______,  _______,  _______,            KC_PGUP,  KC_END ,
     _______,  _______,  _______,  _______,            _______,    _______,  _______,                      _______,  _______,            _______,  KC_PGDN,  _______
   ),
@@ -230,14 +217,15 @@ void matrix_scan_user(void) {
     process_leader_key_user();
     #endif
 
-    hid_send_activity_ping();
+    send_queued_incremental_volume_change();
+    send_queued_activity_ping();
 }
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
   // Send keystrokes to host keyboard, if connected (see readme)
   // process_record_remote_kb(keycode, record);
 
-    send_activity_ping = true;
+    queue_activity_ping();
 
     bool continue_key_processing = process_macros(keycode, record);
 
@@ -280,6 +268,43 @@ void encoder_change_RGB(bool clockwise) {
     last_led_changed_time = timer_read32(); 
 }
 
+void encoder_handle_base_layer(bool clockwise) {
+    bool shift = get_mods() & MOD_MASK_SHIFT;
+    // bool alt = get_mods() & MOD_MASK_ALT;
+    bool ctrl = get_mods() & MOD_MASK_CTRL;
+
+    if (clockwise) {
+        // tap_code(KC_VOLU);
+        if(shift){
+            
+            queue_volume_change(2, VOLUME_TARGET_FOCUSED);
+            // register_code(KC_F19);
+            // tap_code(KC_UP);
+            // unregister_code(KC_F19);
+            // tap_code16(CK_VOL_UP);
+        }else if(ctrl){
+            send_hid_cmd_get_next_volume_process(1);
+        }else{
+            tap_code(KC_VOLU);            
+        }
+    }else{
+        // tap_code(KC_VOLD);
+        if(shift){
+            queue_volume_change(-2, VOLUME_TARGET_FOCUSED);
+        }else if(ctrl){
+        
+            send_hid_cmd_get_next_volume_process(0);
+        }else{
+            tap_code(KC_VOLD);
+            // register_code(KC_F19);
+            // tap_code(KC_DOWN);
+            // unregister_code(KC_F19);
+            // tap_code16(CK_VOL_DOWN);
+            // send_hid_cmd_change_volume(VOLUME_DOWN_INC, VOLUME_TARGET_FOCUSED);
+        }
+    }  
+}
+
 void encoder_update_user(uint8_t index, bool clockwise) {
     if (layer_state_is(_LOWER)) {
         //change RGB settings
@@ -293,165 +318,9 @@ void encoder_update_user(uint8_t index, bool clockwise) {
         }
     
     }else{
-        if (clockwise) {
-            tap_code(KC_VOLU);
-        }else{
-            tap_code(KC_VOLD);
-        }  
+       encoder_handle_base_layer(clockwise);
     }
 }
-
-
-// -- HID Code --
-#ifdef RAW_ENABLE
-
-#ifdef RGBLIGHT_ENABLE
-void set_rgblight_current_fronter(uint8_t fronter){
-    switch (fronter) {
-        case MEM_SWITCHED_OUT:
-            rgblight_sethsv_noeeprom(HSV_WHITE);
-            break;
-        case MEM_FLUTTERSHY:
-            rgblight_sethsv_noeeprom(HSV_YELLOW);
-            break;
-        case MEM_HIBIKI:
-            rgblight_sethsv_noeeprom(HSV_PURPLE);
-            break;
-        case MEM_LUNA:
-            // rgblight_sethsv_noeeprom(HSV_BLUE);
-            rgblight_sethsv_noeeprom(240, 255, 255);  // Pink
-            break;
-        default:
-            rgblight_sethsv_noeeprom(HSV_RED);
-            break;
-    }
-
-    last_led_changed_time = timer_read32(); 
-}
-
-// https://github.com/qmk/qmk_firmware/blob/master/quantum/rgblight.h
-// Sets each LED to the corresponding HSV value sent from the PC
-void set_rgblight_from_pc_cmd(uint8_t *led_data, uint8_t length){  // 128 Bytes.
-    /* 
-    * Data Format:
-    * Byte n+0: LED Number
-    * Byte n+1: Hue
-    * Byte n+2: Saturation
-    * Byte n+3: Value
-    * */
-    if (!rgblight_is_enabled()) {
-         return;
-    }
-    uint8_t i;
-    for (i=0; i < length; i+=4)
-    {
-        sethsv(led_data[i+1], led_data[i+2], led_data[i+3], (LED_TYPE *) &led[led_data[i]]);  // Hue, Sat, Val, LED Num
-    }
-    rgblight_set();
-
-    last_led_changed_time = timer_read32(); 
-}
-#endif  // -RGBLIGHT_ENABLE
-
-
-void send_hid_debug(uint8_t *data){
-    raw_hid_send_command(CMD_PC_RAW_DEBUG_MSG, data, sizeof(data));
-}
-
-void hid_send_activity_ping(void){
-
-    if (!send_activity_ping || !hid_connected || timer_elapsed(activity_ping_timer) < 5000 || timer_elapsed(last_hid_transmition_time) < 100) {
-        // Only send a ping once every 5 seconds and only if we are connected.
-        return;
-    }
-    send_activity_ping = false;
-    activity_ping_timer = timer_read();  // Reset the activity ping timer
-    uint8_t send_data[32] = {0};  // data packet must be 32 bytes on 8bit AVR platform
-    send_data[0] = CMD_PC_ACTIVITY_PING;
-    raw_hid_send(send_data, sizeof(send_data));
-}
-
-
-void raw_hid_send_command(uint8_t command_id, uint8_t *data, uint8_t length) {
-/*
-* Sent HID Data Packet Format:
-* Byte 0: The Command Type
-* Byte 1: Length of Command Data
-* Byte 2-31: Command Data 
-*
-*/
-    last_hid_transmition_time = timer_read();  // Reset the hid transmition timer
-    uint8_t send_data[32] = {0};  // data packet must be 32 bytes on 8bit AVR platform
-    send_data[0] = command_id;
-    send_data[1] = length;
-    memcpy(&send_data[2], data, length);
-    raw_hid_send(send_data, sizeof(send_data));
-
-    // // wait for just a short bit to avoid loosing a hid packet.
-    // wait_ms(5);
-}
-
-
-void raw_hid_receive(uint8_t *data, uint8_t length) {
-/*
-* Received HID Data Packet Format:
-* Byte 0: The Command Type
-* Byte 1: Length of Command Data
-* Byte 2-31: Command Data 
-*
-* NOTE: The first byte sent from the PC (Report ID) does not equal the first byte here. The Report ID is not included here.
-*/
-
-    hid_connected = true;       // PC connected
-    hid_disconection_timer = timer_read();  // Reset the timeout timer
-
-    if (length >= 3) {
-        uint8_t *command_id   = &(data[0]);
-        uint8_t *data_length  = &(data[1]); 
-        uint8_t *command_data = &(data[2]);
-
-        switch(*command_id){
-            case CMD_DO_NOTHING:  // Exists so we can keep the disconection timer alive.
-                break;
-            case CMD_KB_SET_CURRENT_FRONTER:
-                if(current_fronter != command_data[0]){
-                    current_fronter = command_data[0];
-                    #ifdef RGBLIGHT_ENABLE
-                    set_rgblight_current_fronter(current_fronter);
-                    #endif
-                }
-                break;
-
-            case CMD_KB_SET_RGB_LEDS:
-                #ifdef RGBLIGHT_ENABLE
-                if(*data_length % 4 == 0){  // Data Len must be a multiple of 4 for this function.
-                    set_rgblight_from_pc_cmd(command_data, *data_length);
-                }else{
-                    ; // TODO: Handle This error case
-                }
-                #endif
-                break;
-
-            default:
-                // We either recived a not yet supported HID call or a malformed packet. Do nothing.
-                break;
-        }
-    }
-}
-
-// All hid Timer code clocks in at approx 47 bytes
-bool check_hid_timeout(void){
-
-    if (!hid_connected || timer_elapsed(hid_disconection_timer) > HID_DISCONECTION_TIMEOUT) {
-        hid_connected = false;
-        return false;
-    }
-    return true;
-}
-
-#endif // -HID RAW_ENABLE 
-// --------------
-
 
 #ifdef OLED_DRIVER_ENABLE
 oled_rotation_t oled_init_user(oled_rotation_t rotation) { return OLED_ROTATION_0; }
@@ -524,10 +393,15 @@ void oled_task_user(void) {
 
     // Blank line
     oled_write_ln_P(PSTR(""), false);
-    oled_write_P(PSTR("    Amadea System    "), false);
 
-    // render_debug_layer_mask();
-    render_rgb_state();
+    bool rendered_volume_info = render_volume_display(last_volume_app_name, last_volume_set_point);
+    if(!rendered_volume_info){
+
+        oled_write_P(PSTR("    Amadea System    "), false);
+
+        // render_debug_layer_mask();
+        render_rgb_state();
+    }
 
     // oled_write_ln_P(PSTR("5"), false);
 }

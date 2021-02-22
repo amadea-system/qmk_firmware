@@ -19,6 +19,8 @@
 
 #pragma once
 
+/* ------------- Defines ------------- */
+#define OLED_CHAR_WIDTH ((uint8_t)(OLED_DISPLAY_WIDTH / OLED_FONT_WIDTH))
 
 /* ---------------- Enums -------------- */
 
@@ -26,6 +28,9 @@ enum custom_keycodes {
     /*  Utility Macros  */
     CK_VRSN = SAFE_RANGE,  // Prints out QMK Version Info
     CK_MAKE,  // Compiles the firmware, and adds the flash command based on keyboard bootloader
+    CK_VOL_DOWN,
+    CK_VOL_UP,
+    CK_VOL_MUTE,
 
     /*  Layer Macros  */
     CK_QWERTY,
@@ -69,25 +74,3 @@ enum system_members {
     MEM_HIBIKI,
     MEM_LUNA
 };
-
-// HID Command Protocol Identifiers
-enum hid_commands {
-    CMD_DO_NOTHING = 0,  // Do Nothing
-
-    // CMDs Sent From PC
-    CMD_KB_SET_CURRENT_FRONTER = 1,
-    CMD_KB_SET_ALL_RGB_LEDS,
-    CMD_KB_SET_RGB_LEDS,
-    CMD_KB_ACTIVITY_PING,
-
-    // CMDs Sent To PC
-    CMD_PC_RAW_DEBUG_MSG = 120,
-    CMD_PC_DEBUG_MSG,
-    CMD_PC_SWITCH_FRONTER,
-    CMD_PC_NOTIFY_LAYER_CHANGE,
-    CMD_PC_ACTIVITY_PING
-};
-
-
-/* --------- External Functions --------- */
-bool check_hid_timeout(void);

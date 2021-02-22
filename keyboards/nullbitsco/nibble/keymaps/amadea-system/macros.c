@@ -27,8 +27,9 @@
 #include "quantum.h"
 #include "version.h"  // For the Version Macro
 #include "nibble65_keymap.h"
+#include "amadea_hid_commands.h"
 
-void raw_hid_send_command(uint8_t command_id, uint8_t *data, uint8_t length);
+// void raw_hid_send_command(uint8_t command_id, uint8_t *data, uint8_t length);
 void set_rgblight_current_fronter(uint8_t current_fronter);
 extern uint8_t current_fronter;
 
@@ -59,7 +60,7 @@ bool process_macros(uint16_t keycode, keyrecord_t *record){
                 clear_oneshot_mods();
 
                 send_string_with_delay_P(PSTR("cp_fw && qmk"), TAP_CODE_DELAY_M);
-                if ((temp_mod | temp_osm) & MOD_MASK_SHIFT){
+                if ( (temp_mod | temp_osm) & (MOD_MASK_SHIFT | MOD_MASK_CTRL) ){
                     send_string_with_delay_P(PSTR(" flash "), TAP_CODE_DELAY_M);
                 } else {
                     send_string_with_delay_P(PSTR(" compile "), TAP_CODE_DELAY_M);
@@ -72,7 +73,22 @@ bool process_macros(uint16_t keycode, keyrecord_t *record){
                 }
             }
             break;
-    }
+        }
+        case CK_VOL_MUTE:
+            
+            // uint8_t temp_osm = mod_config(get_oneshot_mods());
+            if (record->event.pressed) {
+                uint8_t temp_mod = mod_config(get_mods());
+                // uint8_t temp_osm = mod_config(get_oneshot_mods());
+                if ( (temp_mod) & (MOD_MASK_SHIFT) ){
+                    send_hid_cmd_change_volume(VOLUME_MUTE_TOG, 0, VOLUME_TARGET_FOCUSED);
+                }else if( (temp_mod) & (MOD_MASK_CTRL) ){
+                    send_hid_cmd_get_next_volume_process(2);
+                }else{
+                    tap_code(KC_MUTE);
+                }
+            }
+            break;
 
 // ---- Layer Macros ---- //
         if (record->event.pressed) {
@@ -142,12 +158,7 @@ bool process_macros(uint16_t keycode, keyrecord_t *record){
                     SEND_STRING("<Fluttershy> "); 
                 }
             }
-
-
-        // case RM_4: //remote macro 4
-        //   if (record->event.pressed) {
-        //   }
-        // break;
+            break;
     }
     return true;
 

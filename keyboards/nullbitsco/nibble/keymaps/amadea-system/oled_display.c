@@ -22,19 +22,29 @@
 
 #include "quantum.h"
 #include "nibble65_keymap.h"
+#include "amadea_hid_commands.h"
+
+#define RGB_SCREEN_TIMEOUT 10000
+#define VOLUME_SCREEN_TIMEOUT 15000
+
+bool show_volume_display = false;
 
 /* --------- External Variables --------- */
 extern uint8_t current_fronter;
 extern uint32_t last_led_changed_time;
-
+extern uint16_t volume_changed_timer;
 
 /* ------------ Function Defs ----------- */
 
-void write_spaces(uint8_t num_of_spaces){
+void write_spaces(uint8_t num_of_spaces, bool invert){
+    if(num_of_spaces > OLED_CHAR_WIDTH){
+        return;
+    }
+
     for (uint8_t i = 0; i < num_of_spaces; i++)
     {
         // oled_write_P(PSTR(" "), false);
-        oled_write_char(' ', false);
+        oled_write_char(' ', invert);
     }
 }
 
@@ -113,11 +123,58 @@ void render_current_fronter(void){
 void render_layer_and_fronter(void){
 
     uint8_t length = render_layer_state();     // 6 char
-    length = 21 - length - 7;
-    write_spaces(length);
+    length = OLED_CHAR_WIDTH - length - 7;
+    write_spaces(length, false);
     
     // oled_write_P(PSTR("        "), false);      // 8 Chars
     render_current_fronter(); // 7 char
+
+}
+
+// Writes the App Target and the current volume.
+// Draws to the last 2 lines.
+// returns - bool indicating whether it drew to the screen or not.
+bool render_volume_display(const char *target_name, uint8_t volume_pct){
+
+    if (!show_volume_display || timer_elapsed(volume_changed_timer) > VOLUME_SCREEN_TIMEOUT) {
+        // Only show volume info for a short time.
+        show_volume_display = false;
+        return false;
+    }
+
+    // if (timer_elapsed(volume_changed_timer) > 5000) {
+    //     // Only show volume info for a short time.
+        
+    //     oled_write_ln_P((PSTR("Timer Value: ")), false);
+
+    //     char vol_info_str[22];
+    //     snprintf(vol_info_str, sizeof(vol_info_str), "%u", timer_elapsed(volume_changed_timer));
+    //     oled_write(vol_info_str, false);
+    //     return true;
+    // }
+
+    oled_write(target_name, false);
+    uint8_t target_name_len = strlen(target_name);
+    write_spaces(OLED_CHAR_WIDTH - target_name_len, false);
+
+
+    if(volume_pct != 255){
+        char vol_info_str[22];
+
+        #define VOL_INFO_PERCENTAGE_LEN 5
+        snprintf(vol_info_str, sizeof(vol_info_str), "%3d%% ", volume_pct);
+        oled_write(vol_info_str, false);
+
+        uint8_t volume_bar_len = (100*(OLED_CHAR_WIDTH - VOL_INFO_PERCENTAGE_LEN))/100;
+
+        uint8_t volume_bar_spaces = (volume_pct*(OLED_CHAR_WIDTH - VOL_INFO_PERCENTAGE_LEN))/100;
+        write_spaces(volume_bar_spaces, true);
+        write_spaces(volume_bar_len-volume_bar_spaces, false);
+    }else{
+        oled_write_P(PSTR("Muted"), false);
+    }
+    
+    return true;
 
 }
 
@@ -139,7 +196,7 @@ void render_rgb_state(void) {
     #ifdef RGBLIGHT_ENABLE
     
     // if(timer_expired(timer_read(), last_led_changed_time + 15000)){
-    if (timer_elapsed32(last_led_changed_time) > 15000) {
+    if (timer_elapsed32(last_led_changed_time) > RGB_SCREEN_TIMEOUT) {
         // Only show the RGB Info for a short time after changing it.
         oled_write_ln_P(PSTR(""), false);
         return;// false;
