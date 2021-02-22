@@ -33,12 +33,32 @@ enum tap_dance_keycodes{
     TAPPY_KEY = 0
 };
 
+
+enum custom_keycodes {
+
+    /*  Utility Macros  */
+    CK_VRSN = SAFE_RANGE,  // Prints out QMK Version Info
+    CK_MAKE,  // Compiles the firmware, and adds the flash command based on keyboard bootloader
+
+    /*  Layer Macros  */
+    CK_ALT_LY,
+
+    /*  Switching Macros  */
+    CK_SW_HIBIKI,          // Send Hibiki Switch CMD to PC
+    CK_SW_LUNA,            // Send Luna  Switch CMD to PC
+    CK_SW_TEST,         // Cycle through fronters internally to test code
+
+    /*  Test Macros  */
+    CK_TEST             // For random test stuff
+};
+
 // Layer Definitions
 enum layer_number {
     _BASE = 0,
     _FUNCTION,
     _MEDIA,
-    _RGB_LAYER
+    _RGB_LAYER,
+    _ALT_LAYER
 };
 
 // Status LED Brightness

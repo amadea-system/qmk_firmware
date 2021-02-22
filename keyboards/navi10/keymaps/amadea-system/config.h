@@ -45,3 +45,40 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // #define OLED_FONT_H "font.h"
 
 
+/* -- Encoder Configuration -- */
+
+#define ENCODERS_PAD_A { D0 }
+#define ENCODERS_PAD_B { D1 }
+#define ENC_SW_PIN_1 C6
+
+// We need to redefine the matrix to inser the encoder as a DirectPin.
+/* key matrix size */
+#undef MATRIX_ROWS
+#undef MATRIX_COLS
+
+#define MATRIX_ROWS 4
+#define MATRIX_COLS 4  // 3
+#define MATRIX_MASKED 
+
+/* Keyboard Matrix Assignments */
+#undef MATRIX_ROW_PINS
+#undef MATRIX_COL_PINS
+#define MATRIX_ROW_PINS  { B6, B2, B3, B4 }
+#define MATRIX_COL_PINS  { D4, E6, B1, ENC_SW_PIN_1 }  // Encoders: C6  // { D4, E6, B1 }
+
+
+#define LAYOUT_W_ENC( \
+    k0, k1, k2, k10,\
+    k3, k4, k5,\
+               \
+        k6,    \
+    k7, k8, k9 \
+) \
+{ \
+    {k0,    k1, k2,    k10}, \
+    {k3,    k4, k5,    KC_NO}, \
+    {KC_NO, k6, KC_NO, KC_NO}, \
+    {k7,    k8, k9,    KC_NO}, \
+}
+
+

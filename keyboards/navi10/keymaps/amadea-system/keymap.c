@@ -23,12 +23,17 @@
  * https://www.reddit.com/r/olkb/comments/5s8q76/help_pro_micro_pinout_for_qmk/
  * https://cdn.sparkfun.com/assets/9/c/3/c/4/523a1765757b7f5c6e8b4567.png
  * 
+ * Look at implementing a kitty or pone version of:
+ * https://www.reddit.com/r/olkb/comments/lmtgxc/introducing_luna_the_qmk_keyboard_pet/?ref=share&ref_source=link
+ * https://github.com/HellSingCoder/qmk_firmware/commit/b4e617f7a4928f6c05f7669ccb36e95e72ead324
+ * 
  */
 
 
 #include QMK_KEYBOARD_H
 #include "print.h"
 #include "raw_hid.h"
+#include "version.h"
 
 #include "string.h" // For memcpy
 #include "stdio.h"
@@ -131,6 +136,15 @@ void tk_reset(qk_tap_dance_state_t *state, void *user_data);
 
 /* -------- KeyMap Definition -------- */
 
+const matrix_row_t matrix_mask[MATRIX_ROWS] =
+{// ----4321
+  0b00001111, 
+  0b00000111,
+  0b00000010,
+  0b00000111,
+};
+
+
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
     /* Base Layer  (Fronter colored)
@@ -146,8 +160,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     * '--------------------'
     */
 
-    [_BASE] = LAYOUT(/* Base */
-             TD(TAPPY_KEY), KC_HOME,  KC_PGUP,
+    [_BASE] = LAYOUT_W_ENC(/* Base */
+             TD(TAPPY_KEY), KC_HOME,  KC_PGUP, KC_MUTE,
                  KC_DEL,    KC_END,   KC_PGDN,
                  
                             KC_UP,
@@ -166,9 +180,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     * |______|______|______|
     * '--------------------'
     */
-    [_FUNCTION] = LAYOUT(/* function layer */
-                 KC_TRNS,   KC_VOLU,    XXXXXXX,
-                 XXXXXXX,   KC_VOLD,    KC_MUTE,
+    [_FUNCTION] = LAYOUT_W_ENC(/* function layer */
+                 KC_TRNS,   KC_VOLU,    XXXXXXX,  KC_MUTE,
+               CK_ALT_LY,   KC_VOLD,    KC_MUTE,
                  
                             KC_TRNS,
                  KC_TRNS,   KC_TRNS,    KC_TRNS),
@@ -186,8 +200,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     * |  <<  | Play |  >>  |
     * '--------------------'
     */
-    [_MEDIA] = LAYOUT(/* media function layer, toggled on a single tap */
-                 KC_TRNS,   KC_VOLU,    XXXXXXX, 
+    [_MEDIA] = LAYOUT_W_ENC(/* media function layer, toggled on a single tap */
+                 KC_TRNS,   KC_VOLU,    XXXXXXX,  KC_MUTE,
                  XXXXXXX,   KC_VOLD,    KC_MUTE,
                  
                             KC_SPC ,
@@ -206,12 +220,34 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     * | Mode | SAT- |      |
     * '--------------------'
     */
-    [_RGB_LAYER] = LAYOUT(/* RGB layer */
-                 KC_TRNS,   RGB_HUI,    RGB_VAI,
+    [_RGB_LAYER] = LAYOUT_W_ENC(/* RGB layer */
+                 KC_TRNS,   RGB_HUI,    RGB_VAI,  KC_MUTE,
                  RGB_TOG,   RGB_HUD,    RGB_VAD,
                  
                             RGB_SAI,
                  RGB_MOD,   RGB_SAD,    XXXXXXX),
+
+
+
+    /* Alt Func layer, toggled on a double tap  - White
+    * ,--------------------.
+    * | _Base|      | Yeet |
+    * |------+------+------|
+    * | Shift|      |      |
+    * \--------------------/
+    *        '------'
+    *        |Hibiki|
+    * '------+------+------'
+    * |      | Luna | VRSN |
+    * '--------------------'
+    */
+
+    [_ALT_LAYER] = LAYOUT_W_ENC(/* Alt Fn layer */
+                  CK_ALT_LY,   XXXXXXX,    CK_MAKE,  KC_MUTE,
+                    KC_LSFT,   XXXXXXX,    XXXXXXX,
+                    
+                           CK_SW_HIBIKI,
+                    XXXXXXX,CK_SW_LUNA,    CK_VRSN),
 
 };
 
@@ -609,7 +645,7 @@ void tk_finished(qk_tap_dance_state_t *state, void *user_data){
         case SINGLE_HOLD:
             //set to desired layer when held:
             //setting to the function layer
-            layer_on(_FUNCTION);
+            layer_on(_FUNCTION);  // tk_reset() turns off _function
             xprintf("Turning On Function Layer\n");
             break;
 
@@ -676,9 +712,51 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 
     hid_send_activity_ping();
 
-    // switch (keycode) {
+    // - Press Down Only Macros -
+    if (record->event.pressed) {
+         switch (keycode) {
 
-    // }
+            case CK_VRSN:  // Prints out QMK Version Info
+                SEND_STRING(QMK_KEYBOARD "/" QMK_KEYMAP " @ " QMK_VERSION "\nCompiled On " QMK_BUILDDATE "\n");
+                // return false;
+                break;
+
+            case CK_MAKE:
+                {
+                    uint8_t temp_mod = mod_config(get_mods());
+                    // uint8_t temp_osm = mod_config(get_oneshot_mods());
+                    clear_mods();
+                    // clear_oneshot_mods();
+
+                    send_string_with_delay_P(PSTR("cp_fw && qmk"), 5);
+                    // if ((temp_mod | temp_osm) & MOD_MASK_SHIFT){
+                    if ((temp_mod) & MOD_MASK_SHIFT){
+                        send_string_with_delay_P(PSTR(" flash "), 5);
+                    } else {
+                        send_string_with_delay_P(PSTR(" compile "), 5);
+                    }
+                    send_string_with_delay_P(PSTR("-kb " QMK_KEYBOARD " -km " QMK_KEYMAP), 5);
+                    send_string_with_delay_P(PSTR(SS_TAP(X_ENTER)), 5);
+
+                break;
+                }
+         }
+    }
+    // - Press Down Only Macros -
+    if (!record->event.pressed) {
+         switch (keycode) {
+            case CK_ALT_LY:
+                {   
+                    if(layer_state_is(_ALT_LAYER)){
+                        layer_off(_ALT_LAYER);
+                    }else{
+                        layer_move(_ALT_LAYER);
+                    }
+                break;
+                }
+         }
+
+    }
 
     return true;
 
@@ -707,7 +785,7 @@ layer_state_t layer_state_set_user(layer_state_t state) {
             set_hsv_leds(HSV_MAGENTA, true);
             writePinHigh(TX_LED);
             writePinHigh(RX_LED);
-            print("RGB: Blue\n");
+            print("RGB: Magenta\n");
             break;
         case _MEDIA:
             backlight_level(_MEDIA_LAYER_BRIGHTNESS);
@@ -724,7 +802,16 @@ layer_state_t layer_state_set_user(layer_state_t state) {
             set_hsv_leds(HSV_WHITE, true);
             writePinLow(TX_LED);
             writePinLow(RX_LED);
-            print("RGB: Pink\n");
+            print("RGB: White\n");
+            break;
+
+        case _ALT_LAYER:
+            backlight_level(_FUNCTION_LAYER_BRIGHTNESS);
+            // rgblight_sethsv_noeeprom(HSV_WHITE);
+            set_hsv_leds(HSV_RED, true);
+            writePinLow(TX_LED);
+            writePinLow(RX_LED);
+            print("RGB: Red\n");
             break;
   
         default:
@@ -888,17 +975,18 @@ void render_layer_state(void) {
 
     // oled_write_P(PSTR("Layer: "), false);
     // Layer name must be 5 characters long.
-    if(get_highest_layer(layer_state) == _BASE){
-        oled_write_P(PSTR("Layer: "), false);
-    }else{
-        // oled_set_cursor(16, 0);
-        // oled_write_P(PSTR("                "), false);
-        // oled_write_P(PSTR("----------------"), false);
-        // oled_write_P(PSTR("- - - - - - - - "), false);
-    }
+    // if(get_highest_layer(layer_state) == _BASE){
+    //     oled_write_P(PSTR("Layer: "), false);
+    // }else{
+    //     // oled_set_cursor(16, 0);
+    //     // oled_write_P(PSTR("                "), false);
+    //     // oled_write_P(PSTR("----------------"), false);
+    //     // oled_write_P(PSTR("- - - - - - - - "), false);
+    // }
 
     switch (get_highest_layer(layer_state)) {
         case _BASE:
+            oled_write_P(PSTR("Layer: "), false);
             oled_write_ln_P(PSTR("TKL  "), false);
             break;
         case _FUNCTION:
@@ -909,6 +997,9 @@ void render_layer_state(void) {
             break;
         case _RGB_LAYER:
             oled_write_P(PSTR("         RGB         "), false);
+            break;
+        case _ALT_LAYER:
+            oled_write_P(PSTR("       Alt Fun       "), false);
             break;
         default:
             oled_write_P(PSTR("        Undef        "), false);
@@ -965,6 +1056,14 @@ void render_default_screen(void){
     oled_write_ln_P(PSTR(""), false);
 }
 
+void render_keyhints_header(void){
+    
+    render_layer_state();
+    oled_write_ln_P(PSTR(""), false);
+    oled_write_ln_P(PSTR(""), false);
+
+}
+
 void render_keyhint_horz_sep(void){
     // oled_write_ln_P(PSTR("------+------+------"), false);
     oled_write_ln_P(PSTR("- - - + -  - + - - -"), false);
@@ -995,16 +1094,13 @@ void render_keyhint_keyRow(const char *first_key, const char *second_key, const 
 #define __BLANK__KEY__ BLANK_KEY
 void render_keyhints_L_fn(void){
 
-    render_layer_state();
-
-    oled_write_ln_P(PSTR(""), false);
-    oled_write_ln_P(PSTR(""), false);
+    render_keyhints_header();
     
 
     render_keyhint_keyRow(PSTR(" Tappy"), PSTR(" VolUp"), __BLANK__KEY__);
     // render_keyhint_horz_sep();
 
-    render_keyhint_keyRow(__BLANK__KEY__, PSTR(" VolDn"), PSTR(" Mute "));
+    render_keyhint_keyRow(PSTR("_AltFN"), PSTR(" VolDn"), PSTR(" Mute "));
     // render_keyhint_horz_sep();
     oled_write_ln_P(PSTR(""), false);
 
@@ -1030,9 +1126,8 @@ void render_keyhints_L_fn(void){
 
 void render_keyhints_L_media(void){
 
-    render_layer_state();
-    oled_write_ln_P(PSTR(""), false);
-    oled_write_ln_P(PSTR(""), false);
+
+    render_keyhints_header();
 
     render_keyhint_keyRow(PSTR(" Tappy"), PSTR(" VolUp"), BLANK_KEY);
     // render_keyhint_horz_sep();
@@ -1048,9 +1143,7 @@ void render_keyhints_L_media(void){
 
 void render_keyhints_L_RGB(void){
 
-    render_layer_state();
-    oled_write_ln_P(PSTR(""), false);
-    oled_write_ln_P(PSTR(""), false);
+    render_keyhints_header();
 
     render_keyhint_keyRow(PSTR(" Tappy"), PSTR(" Hue+ "), PSTR("Brght+"));
     // render_keyhint_horz_sep();
@@ -1063,6 +1156,25 @@ void render_keyhints_L_RGB(void){
     // render_keyhint_horz_sep();
 
     render_keyhint_keyRow(PSTR(" Mode "), PSTR(" Sat- "), __BLANK__KEY__);
+}
+
+
+void render_keyhints_L_Alt_FN(void){
+
+
+    render_keyhints_header();
+
+    render_keyhint_keyRow(PSTR(" _TKL "), __BLANK__KEY__, PSTR(" Yeet "));
+    // render_keyhint_horz_sep();
+
+    render_keyhint_keyRow(PSTR(" Shift"), __BLANK__KEY__, __BLANK__KEY__);
+    // render_keyhint_horz_sep();
+    oled_write_ln_P(PSTR(""), false);
+
+    render_keyhint_keyRow(__BLANK__KEY__, PSTR("Hibiki"), __BLANK__KEY__);
+    // render_keyhint_horz_sep();
+
+    render_keyhint_keyRow(__BLANK__KEY__, PSTR(" Luna "), PSTR(" Vrsn "));
 }
 
 
@@ -1081,6 +1193,9 @@ void oled_task_user(void) {
             break;
         case _RGB_LAYER:
             render_keyhints_L_RGB();
+            break;
+        case _ALT_LAYER:
+            render_keyhints_L_Alt_FN();
             break;
         default:
             render_default_screen();
