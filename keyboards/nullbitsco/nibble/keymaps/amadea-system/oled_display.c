@@ -66,6 +66,10 @@ int render_layer_state(void) {
                     oled_write_P(PSTR("QWERTY"), false);
                     layer_name_length = 6;
                     break;
+                case _COLEMAK:               
+                    oled_write_P(PSTR("Colemak"), false);
+                    layer_name_length = 7;
+                    break;
                 case _GAME_WASD:               
                     oled_write_P(PSTR("GAME - WASD"), true);
                     layer_name_length = 11;

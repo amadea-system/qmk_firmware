@@ -77,7 +77,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * |------||--------------------------------------------------------------------------------------------------|
  * |  F15 ||   Ctrl    |  Z  |  X  |  C  |  V  |  B  |  N  |  M  |  ,  |  .  |  /  |   R-Shift   | Up  |Pg Dn |
  * |------||--------------------------------------------------------------------------------------------------|
- * | XXXX ||Lower|  Gui  |  Alt  |    Space     | Leader |    Enter   |  Raise  |    GUI   | Lft | Dwn | Rht  |
+ * | H-F19||Lower|  Gui  |  Alt  |    Space     | Leader |    Enter   |  Raise  |    GUI   | Lft | Dwn | Rht  |
  * `------'`--------------------------------------------------------------------------------------------------'
  */
   
@@ -99,7 +99,29 @@ CK_VOL_MUTE,   KC_TAB,   KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,      KC_Y,   
   ),
 
 
-/* Game-WASD - Default Layer 2  
+/* Colemak-DH (Wide) - Default Layer 2
+ *         ,--------------------------------------------------------------------------------------------------.
+ *         | Esc   |  1  |  2  |  3  |  4  |  5  |  6  |  7  |  8  |  9  |  0  |  -  |  =  |     ~     |  \   |
+ * ,------.|--------------------------------------------------------------------------------------------------|
+ * | Mute || Tab    |  Q  |  W  |  F  |  P  |  B  |  [  |  J  |  L  |  U  |  Y  |  ;  |  '  |  Bkspc   | Del  |
+ * |------||--------------------------------------------------------------------------------------------------|
+ * |Prox L|| L-Shift |  A  |  R  |  S  |  T  |  G  |  ]  |  M  |  N  |  E  |  I  |  O  |    Enter      |Pg Up |
+ * |------||--------------------------------------------------------------------------------------------------|
+ * |  F15 ||   Ctrl    |  X  |  C  |  D  |  V  |  Z  |  /  |  K  |  H  |  ,  |  .  |   R-Shift   | Up  |Pg Dn |
+ * |------||--------------------------------------------------------------------------------------------------|
+ * | H-F19||Lower|  Gui  |  Alt  |    Space     | Leader |    Enter   |  Raise  |    GUI   | Lft | Dwn | Rht  |
+ * `------'`--------------------------------------------------------------------------------------------------'
+ */
+
+  [_COLEMAK] = LAYOUT_ansi_split_space(
+                 KC_ESC,   KC_1,     KC_2,      KC_3,  KC_4,    KC_5,     KC_6,     KC_7,  KC_8,  KC_9,      KC_0,     KC_MINS,  KC_EQL,   KC_BSLS,  KC_GRV,
+   CK_VOL_MUTE,  KC_TAB,   KC_Q,     KC_W,      KC_F,  KC_P,    KC_B,     KC_LBRC,  KC_J,  KC_L,  KC_U,      KC_Y,     KC_SCLN,  KC_QUOT,  KC_BSPC,  KC_DEL,
+    CK_PY_LUNA,  KC_LSFT,  KC_A,     KC_R,      KC_S,  KC_T,    KC_G,     KC_RBRC,  KC_M,  KC_N,  KC_E,      KC_I,     KC_O,               KC_ENT,   KC_PGUP,
+    KC_F15,      KC_LCTL,  KC_X,     KC_C,      KC_D,  KC_V,    KC_Z,     KC_SLSH,  KC_K,  KC_H,  KC_COMM,   KC_DOT,   KC_RSFT,            KC_UP,    KC_PGDN,
+    HYPER_F19,   KC_LALT,  KC_LGUI,  MO_LOWER,         KC_SPC,  KC_LEAD,  KC_ENT,                 MO_RAISE,  KC_RGUI,            KC_LEFT,  KC_DOWN,  KC_RGHT
+  ),
+
+/* Game-WASD - Default Layer 3
  *         ,--------------------------------------------------------------------------------------------------.
  *         | Esc   |  1  |  2  |  3  |  4  |  5  |  6  |  7  |  8  |  9  |  0  |  -  |  =  |     ~     |  \   |
  * ,------.|--------------------------------------------------------------------------------------------------|
@@ -123,7 +145,7 @@ CK_VOL_MUTE,   KC_TAB,   KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,      KC_Y,   
   ),
 
 
-/* Game-MCraft - Default Layer 2  
+/* Game-MCraft - Default Layer 4
  *         ,--------------------------------------------------------------------------------------------------.
  *         | Esc   |  1  |  2  |  3  |  4  |  5  |  6  |  7  |  8  |  9  |  0  |  -  |  =  |     ~     |  \   |
  * ,------.|--------------------------------------------------------------------------------------------------|
@@ -198,14 +220,15 @@ CK_VOL_MUTE,   KC_TAB,   KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,      KC_Y,   
   #define TOG_QWERT CK_QWERTY //DF(_QWERTY)
   #define TOG_WASD  CK_WASD   //DF(_GAME_WASD)
   #define TOG_MINE  CK_MINE   //DF(_GAME_MCRAFT)
+  #define TOG_CMAK  CK_COLEMAK
  
 
   [_RAISE] = LAYOUT_ansi_split_space(  
-                  RESET,    KC_F1,      KC_F2,     KC_F3,    KC_F4,    KC_F5,    KC_F6,    KC_F7,    KC_F8,    KC_F9,    KC_F10,   KC_F11,   KC_F12,   _______,  CK_VRSN,
-    GUI_UP,       _______,  TOG_QWERT,  TOG_WASD,  TOG_MINE, _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  KC_DEL,   _______,
-    CK_SW_LUNA,   _______,  _______,    _______,   _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,            _______,  KC_HOME,
-    _______,      _______,  _______,    _______,   _______,  _______,  KC_WBAK,  CK_NYAA,  CK_MAKE,  _______,  _______,  _______,  _______,            GUI_UP,   KC_END ,
-    CK_SW_HIBIKI, _______,  _______,    _______,             _______,  _______,  _______,                      _______,  _______,            GUI_LEFT, GUI_DOWN, GUI_RIGHT
+                  RESET,    KC_F1,      KC_F2,     KC_F3,    KC_F4,     KC_F5,    KC_F6,    KC_F7,    KC_F8,    KC_F9,    KC_F10,   KC_F11,   KC_F12,   _______,  CK_VRSN,
+    GUI_UP,       _______,  TOG_QWERT,  TOG_WASD,  TOG_MINE, TOG_CMAK,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  KC_DEL,   _______,
+    CK_SW_LUNA,   _______,  _______,    _______,   _______,  _______,   _______,  _______,  _______,  _______,  _______,  _______,  _______,            _______,  KC_HOME,
+    _______,      _______,  _______,    _______,   _______,  _______,   KC_WBAK,  CK_NYAA,  CK_MAKE,  _______,  _______,  _______,  _______,            GUI_UP,   KC_END ,
+    CK_SW_HIBIKI, _______,  _______,    _______,             _______,   _______,  _______,                      _______,  _______,            GUI_LEFT, GUI_DOWN, GUI_RIGHT
   ), 
 
 };

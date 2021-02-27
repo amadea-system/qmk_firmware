@@ -34,6 +34,7 @@ enum custom_keycodes {
 
     /*  Layer Macros  */
     CK_QWERTY,
+    CK_COLEMAK,
     CK_WASD,
     CK_MINE,
 
@@ -61,6 +62,7 @@ enum custom_keycodes {
 enum layers {
     // _BASE = 0,
     _QWERTY = 0,
+    _COLEMAK,
     _GAME_WASD,
     _GAME_MCRAFT,
     _LOWER,

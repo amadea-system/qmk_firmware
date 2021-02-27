@@ -98,6 +98,12 @@ bool process_macros(uint16_t keycode, keyrecord_t *record){
                 default_layer_set(1U << _QWERTY);
                 // set_single_persistent_default_layer(_QWERTY);
                 break;
+            case CK_COLEMAK:
+                rgblight_reload_from_eeprom();
+                set_rgblight_current_fronter(current_fronter);
+                default_layer_set(1U << _COLEMAK);
+                // set_single_persistent_default_layer(_QWERTY);
+                break;
             case CK_WASD:
                 rgblight_mode_noeeprom(RGBLIGHT_MODE_RAINBOW_MOOD);
                 default_layer_set(1U << _GAME_WASD);
