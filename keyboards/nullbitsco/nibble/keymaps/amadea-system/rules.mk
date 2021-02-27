@@ -24,3 +24,9 @@ SRC +=  oled_display.c \
 		amadea_hid_commands.c \
 #		leader.c #\
 #		macros.c
+
+# --- Nibble Includes --- #
+# SRC += bitc_led.c \
+#        big_led.c \
+#        remote_kb.c \
+#        tmk_core/common/uart.c

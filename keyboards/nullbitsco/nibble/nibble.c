@@ -20,7 +20,9 @@
 bool led_update_kb(led_t led_state) {
     bool res = led_update_user(led_state);
     if (res) {
+        #ifdef NIBBLE_BITC_LED_ENABLE
         set_bitc_LED(led_state.caps_lock ? LED_DIM : LED_OFF);
+        #endif
     }
     return res;
 }

@@ -66,6 +66,11 @@
 #    undef LOCKING_RESYNC_ENABLE
 #endif
 
+/* --- Nibble Features --- */
+// #define NIBBLE_BIG_LED_ENABLE
+// #define NIBBLE_BITC_LED_ENABLE
+// #define NIBBLE_REMOTE_KB_ENABLE
+
 
 /* ------- Keyboard Layouts ------- */
 
