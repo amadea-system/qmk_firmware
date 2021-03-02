@@ -24,12 +24,8 @@ LTO_ENABLE = yes            # Link-time optimization
 CUSTOM_MATRIX = lite        # Lite custom matrix
 
 # Project specific files
-<<<<<<< HEAD
-SRC += matrix.c
-=======
 SRC += matrix.c \
        bitc_led.c \
        big_led.c \
        remote_kb.c
 QUANTUM_LIB_SRC += uart.c
->>>>>>> c5b0b6ff3258f82fdaad137dea179157e8dea3e3
