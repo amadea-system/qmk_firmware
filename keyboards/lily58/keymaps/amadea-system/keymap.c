@@ -202,12 +202,18 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 ),
 */
 
+#define GUI_UP     LGUI(KC_UP)    // CK_GUI_UP   
+#define GUI_DOWN   LGUI(KC_DOWN)  // CK_GUI_DOWN 
+#define GUI_LEFT   LGUI(KC_LEFT)  // CK_GUI_LEFT 
+#define GUI_RIGHT  LGUI(KC_RIGHT) // CK_GUI_RIGHT
+
+
 [_RAISE] = LAYOUT( \
-  XXXXXXX,  E_INTRO,  E_MOON,  E_BFLY,  E_S_CAT, XXXXXXX,                     XXXXXXX, XXXXXXX,       XXXXXXX,       XXXXXXX,       XXXXXXX,  KC_AUDIO_VOL_UP, \
-  XXXXXXX,  XXXXXXX,  XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,                     XXXXXXX, XXXXXXX,       LGUI(KC_UP),   XXXXXXX,       XXXXXXX,  KC_AUDIO_VOL_DOWN, \
-  KC_F1,    KC_F2,    KC_F3,   KC_F4,   KC_F5,   KC_F6,                       XXXXXXX, LGUI(KC_LEFT), LGUI(KC_DOWN), LGUI(KC_RGHT), XXXXXXX,  KC_AUDIO_MUTE, \
-  _______,  KC_F8,    KC_F9,   KC_F10,  KC_F11,  KC_F12,   _______, _______,  KC_PLUS, KC_MINS,       KC_EQL,        KC_LBRC,       KC_RBRC,  KC_BSLS, \
-                               _______, _______, _______,  _______, _______,  _______, KC_DEL,        _______ \
+  XXXXXXX,  E_INTRO,  E_MOON,  E_BFLY,  E_S_CAT, XXXXXXX,                     XXXXXXX, XXXXXXX,   XXXXXXX,   XXXXXXX,    XXXXXXX,  KC_AUDIO_VOL_UP, \
+  XXXXXXX,  XXXXXXX,  XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,                     XXXXXXX, XXXXXXX,   GUI_UP,    XXXXXXX,    XXXXXXX,  KC_AUDIO_VOL_DOWN, \
+  KC_F1,    KC_F2,    KC_F3,   KC_F4,   KC_F5,   KC_F6,                       XXXXXXX, GUI_LEFT,  GUI_DOWN,  GUI_RIGHT,  XXXXXXX,  KC_AUDIO_MUTE, \
+  _______,  KC_F8,    KC_F9,   KC_F10,  KC_F11,  KC_F12,   _______, _______,  KC_PLUS, KC_MINS,   KC_EQL,    KC_LBRC,    KC_RBRC,  KC_BSLS, \
+                               _______, _______, _______,  _______, _______,  _______, KC_DEL,    _______ \
 ),
 
 // [2] = LAYOUT(KC_NO, KC_NO, KC_NO, KC_NO,  KC_NO,  KC_NO,                      KC_NO,   KC_NO,         KC_NO,         KC_NO,         KC_NO,   KC_VOLU, 
@@ -615,6 +621,8 @@ void oled_task_user(void) {
 
 #endif // OLED_DRIVER_ENABLE
 
+
+// #define KEYCODE_DIR_KEY_OFFSET X_RIGHT + keycode - CK_GUI_RIGHT
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 
     // hid_send_activity_ping();
@@ -654,6 +662,16 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 
                     break;
                 }
+
+            // case CK_GUI_RIGHT ... CK_GUI_UP:
+            //     {   //KC_RIGHT, KC_LEFT, KC_DOWN, KC_UP,
+            //         // direction = KC_RIGHT + (keycode - CK_GUI_RIGHT)
+            //         register_code(KC_LGUI);
+            //         tap_code(KC_RIGHT + keycode - CK_GUI_RIGHT);
+            //         SEND_STRING(SS_DELAY(100));
+            //         unregister_code(KC_LGUI);
+            //         break;
+            //     }
 
             case SW_HIBIKI:
                 new_fronter = MEM_HIBIKI;

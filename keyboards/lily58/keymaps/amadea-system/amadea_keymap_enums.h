@@ -34,7 +34,13 @@ enum custom_keycodes {
     /*  Utility Macros  */
     VRSN = SAFE_RANGE,  // Prints out QMK Version Info
     CK_MAKE,  // Compiles the firmware, and adds the flash command based on keyboard bootloader
-
+    
+    // GUI + Direction macros with delays to prevent wierd behavior in windows.
+    // CK_GUI_RIGHT,
+    // CK_GUI_LEFT,
+    // CK_GUI_DOWN, 
+    // CK_GUI_UP,
+    
     /*  Switching Macros  */
     SW_HIBIKI,          // Send Hibiki Switch CMD to PC
     SW_LUNA,            // Send Luna  Switch CMD to PC
