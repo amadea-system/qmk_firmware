@@ -371,7 +371,8 @@ void set_rgblight_current_fronter(void){
             set_hsv_fronter_value(HSV_PURPLE);
             break;
         case MEM_LUNA:
-            set_hsv_fronter_value(HSV_BLUE);
+            // set_hsv_fronter_value(HSV_BLUE);
+            set_hsv_fronter_value(240, 255, 200);  // Pink
             break;
         case 255:
             set_hsv_fronter_value(HSV_RED);
